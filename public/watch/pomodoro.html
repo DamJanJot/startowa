@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Watch Pomodoro</title>
+  <link rel="stylesheet" href="./assets/watch.css">
+</head>
+<body>
+  <main class="watch-wrap" id="swipeRoot">
+    <header class="head">
+      <div>
+        <div class="head-title">Watch Pomodoro</div>
+        <div class="head-sub">25/5 focus timer</div>
+      </div>
+      <a class="btn" href="./index.html" style="min-height:34px;padding:6px 10px;">Home</a>
+    </header>
+
+    <section class="panel stack">
+      <div class="panel" style="text-align:center; padding:18px 10px;">
+        <div class="badge" id="modeBadge">Tryb: Focus</div>
+        <div id="time" style="font-size:44px; font-weight:800; margin-top:10px; letter-spacing:0.05em;">25:00</div>
+        <div class="meta" id="cycles">Cykl: 0</div>
+      </div>
+
+      <div class="stack" style="display:grid; grid-template-columns:1fr 1fr;">
+        <button class="btn primary" id="startPauseBtn">Start</button>
+        <button class="btn" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="stack" style="display:grid; grid-template-columns:1fr 1fr;">
+        <button class="btn" id="focusPresetBtn">Focus 25</button>
+        <button class="btn" id="breakPresetBtn">Break 5</button>
+      </div>
+
+      <p class="meta" id="status">Gotowe do pracy.</p>
+    </section>
+
+    <nav class="footer-nav">
+      <a href="./watch-ai.html">AI</a>
+      <a href="./survival.html">Survival</a>
+      <a href="./remote-camera.html">Camera</a>
+      <a class="active" href="./pomodoro.html">Pomodoro</a>
+      <a href="./terminal-mode.html">Terminal</a>
+      <a href="./ideas.html">Pomysly</a>
+    </nav>
+  </main>
+
+  <script src="./assets/watch.js"></script>
+  <script>
+    const FOCUS_SEC = 25 * 60;
+    const BREAK_SEC = 5 * 60;
+
+    let mode = "focus";
+    let seconds = FOCUS_SEC;
+    let timer = null;
+    let running = false;
+    let cycles = 0;
+
+    const timeEl = document.getElementById("time");
+    const modeBadgeEl = document.getElementById("modeBadge");
+    const statusEl = document.getElementById("status");
+    const cyclesEl = document.getElementById("cycles");
+    const startPauseBtn = document.getElementById("startPauseBtn");
+
+    function format(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, "0");
+      const s = (sec % 60).toString().padStart(2, "0");
+      return `${m}:${s}`;
+    }
+
+    function render() {
+      timeEl.textContent = format(seconds);
+      modeBadgeEl.textContent = `Tryb: ${mode === "focus" ? "Focus" : "Break"}`;
+      cyclesEl.textContent = `Cykl: ${cycles}`;
+      startPauseBtn.textContent = running ? "Pauza" : "Start";
+    }
+
+    function switchMode(nextMode) {
+      mode = nextMode;
+      seconds = mode === "focus" ? FOCUS_SEC : BREAK_SEC;
+      statusEl.textContent = mode === "focus" ? "Czas na skupienie." : "Krótka przerwa.";
+      render();
+    }
+
+    function tick() {
+      seconds -= 1;
+      if (seconds <= 0) {
+        if (mode === "focus") {
+          cycles += 1;
+          switchMode("break");
+          statusEl.textContent = "Focus skończony. Przerwa!";
+        } else {
+          switchMode("focus");
+          statusEl.textContent = "Przerwa skończona. Wracamy!";
+        }
+      }
+      render();
+    }
+
+    startPauseBtn.addEventListener("click", () => {
+      running = !running;
+      if (running) {
+        timer = setInterval(tick, 1000);
+        statusEl.textContent = "Timer działa.";
+      } else {
+        clearInterval(timer);
+        timer = null;
+        statusEl.textContent = "Pauza.";
+      }
+      render();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      running = false;
+      clearInterval(timer);
+      timer = null;
+      cycles = 0;
+      switchMode("focus");
+      statusEl.textContent = "Zresetowano.";
+      render();
+    });
+
+    document.getElementById("focusPresetBtn").addEventListener("click", () => {
+      running = false;
+      clearInterval(timer);
+      timer = null;
+      switchMode("focus");
+      render();
+    });
+
+    document.getElementById("breakPresetBtn").addEventListener("click", () => {
+      running = false;
+      clearInterval(timer);
+      timer = null;
+      switchMode("break");
+      render();
+    });
+
+    setupSwipe(
+      document.getElementById("swipeRoot"),
+      () => { window.location.href = "./terminal-mode.html"; },
+      () => { window.location.href = "./remote-camera.html"; }
+    );
+
+    render();
+  </script>
+</body>
+</html>

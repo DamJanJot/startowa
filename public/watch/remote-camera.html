@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Remote Camera</title>
+  <link rel="stylesheet" href="./assets/watch.css">
+</head>
+<body>
+  <main class="watch-wrap" id="swipeRoot">
+    <header class="head">
+      <div>
+        <div class="head-title">Remote Camera</div>
+        <div class="head-sub">Podgląd po URL</div>
+      </div>
+      <a class="btn" href="./index.html" style="min-height:34px;padding:6px 10px;">Home</a>
+    </header>
+
+    <section class="panel stack">
+      <label class="meta" for="streamUrl">Adres streamu (RTSP przez gateway / MJPEG / panel kamery)</label>
+      <input class="input" id="streamUrl" placeholder="https://twoj-stream-url">
+
+      <div class="stack" style="grid-template-columns:1fr 1fr; display:grid;">
+        <button class="btn primary" id="saveUrlBtn">Zapisz URL</button>
+        <button class="btn" id="openBtn">Otwórz</button>
+      </div>
+
+      <div class="panel" style="padding:8px; overflow:hidden;">
+        <iframe id="frame" title="Podgląd" style="width:100%; min-height:260px; border:0; border-radius:12px; background:#04070f;"></iframe>
+      </div>
+
+      <div class="stack" style="grid-template-columns:1fr 1fr; display:grid;">
+        <button class="btn" id="refreshBtn">Odśwież</button>
+        <button class="btn" id="toggleAutoBtn">Auto: OFF</button>
+      </div>
+
+      <p class="meta" id="status">Wprowadź URL i kliknij Otwórz.</p>
+    </section>
+
+    <nav class="footer-nav">
+      <a href="./watch-ai.html">AI</a>
+      <a href="./survival.html">Survival</a>
+      <a class="active" href="./remote-camera.html">Camera</a>
+      <a href="./pomodoro.html">Pomodoro</a>
+      <a href="./terminal-mode.html">Terminal</a>
+      <a href="./ideas.html">Pomysly</a>
+    </nav>
+  </main>
+
+  <script src="./assets/watch.js"></script>
+  <script>
+    const KEY = "watch-camera-url-v1";
+    const urlEl = document.getElementById("streamUrl");
+    const frameEl = document.getElementById("frame");
+    const statusEl = document.getElementById("status");
+    const toggleAutoBtn = document.getElementById("toggleAutoBtn");
+
+    let auto = false;
+    let timer = null;
+
+    function load() {
+      const url = localStorage.getItem(KEY) || "";
+      urlEl.value = url;
+      if (url) {
+        frameEl.src = url;
+        statusEl.textContent = "Załadowano zapisany URL";
+      }
+    }
+
+    function openFrame() {
+      const url = urlEl.value.trim();
+      if (!url) {
+        statusEl.textContent = "Brak URL";
+        return;
+      }
+      frameEl.src = url;
+      statusEl.textContent = "Podgląd otwarty";
+    }
+
+    document.getElementById("saveUrlBtn").addEventListener("click", () => {
+      localStorage.setItem(KEY, urlEl.value.trim());
+      statusEl.textContent = "URL zapisany";
+    });
+
+    document.getElementById("openBtn").addEventListener("click", openFrame);
+
+    document.getElementById("refreshBtn").addEventListener("click", () => {
+      const src = frameEl.src;
+      if (!src) return;
+      frameEl.src = "about:blank";
+      setTimeout(() => { frameEl.src = src; }, 120);
+      statusEl.textContent = "Odświeżono";
+    });
+
+    toggleAutoBtn.addEventListener("click", () => {
+      auto = !auto;
+      toggleAutoBtn.textContent = `Auto: ${auto ? "ON" : "OFF"}`;
+
+      if (!auto) {
+        clearInterval(timer);
+        timer = null;
+        return;
+      }
+
+      timer = setInterval(() => {
+        const src = frameEl.src;
+        if (!src) return;
+        frameEl.src = src.split("#")[0] + `#${Date.now()}`;
+      }, 12000);
+    });
+
+    setupSwipe(
+      document.getElementById("swipeRoot"),
+      () => { window.location.href = "./pomodoro.html"; },
+      () => { window.location.href = "./survival.html"; }
+    );
+
+    load();
+  </script>
+</body>
+</html>

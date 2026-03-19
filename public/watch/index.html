@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Watch Apps</title>
+  <link rel="stylesheet" href="./assets/watch.css">
+</head>
+<body>
+  <main class="watch-wrap" id="swipeRoot">
+    <header class="head">
+      <div>
+        <div class="head-title">Watch OS</div>
+        <div class="head-sub">Swipe lewo/prawo między apkami</div>
+      </div>
+      <span class="badge">⌚ v1</span>
+    </header>
+
+    <section class="panel card-switch">
+      <div class="switch-track" id="track">
+        <article class="switch-item">
+          <div class="stack">
+            <h3 style="margin:0;">Watch AI</h3>
+            <p class="meta" style="margin:0;">Krótka odpowiedź AI z tekstu lub mowy.</p>
+            <a class="btn primary" href="./watch-ai.html">Otwórz</a>
+          </div>
+        </article>
+
+        <article class="switch-item">
+          <div class="stack">
+            <h3 style="margin:0;">Watch Survival</h3>
+            <p class="meta" style="margin:0;">Gra: energia, jedzenie, woda, dzień.</p>
+            <a class="btn primary" href="./survival.html">Otwórz</a>
+          </div>
+        </article>
+
+        <article class="switch-item">
+          <div class="stack">
+            <h3 style="margin:0;">Remote Camera</h3>
+            <p class="meta" style="margin:0;">Podgląd streamu z telefonu/PC po URL.</p>
+            <a class="btn primary" href="./remote-camera.html">Otwórz</a>
+          </div>
+        </article>
+
+        <article class="switch-item">
+          <div class="stack">
+            <h3 style="margin:0;">Watch Pomodoro</h3>
+            <p class="meta" style="margin:0;">Timer focus/break do pracy i nauki.</p>
+            <a class="btn primary" href="./pomodoro.html">Otwórz</a>
+          </div>
+        </article>
+
+        <article class="switch-item">
+          <div class="stack">
+            <h3 style="margin:0;">Terminal Mode</h3>
+            <p class="meta" style="margin:0;">Pseudo-komendy i hacker vibe.</p>
+            <a class="btn primary" href="./terminal-mode.html">Otwórz</a>
+          </div>
+        </article>
+
+        <article class="switch-item">
+          <div class="stack">
+            <h3 style="margin:0;">Ideas Tracker</h3>
+            <p class="meta" style="margin:0;">Szybki zapis pomysłów z zegarka.</p>
+            <a class="btn primary" href="./ideas.html">Otwórz</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <nav class="footer-nav">
+      <a href="./watch-ai.html">AI</a>
+      <a href="./survival.html">Survival</a>
+      <a href="./remote-camera.html">Camera</a>
+      <a href="./pomodoro.html">Pomodoro</a>
+      <a href="./terminal-mode.html">Terminal</a>
+      <a href="./ideas.html">Pomysly</a>
+    </nav>
+  </main>
+
+  <script src="./assets/watch.js"></script>
+  <script>
+    const track = document.getElementById("track");
+    const root = document.getElementById("swipeRoot");
+    let index = 0;
+    const max = 5;
+
+    function paint() {
+      track.style.transform = `translateX(-${index * 100}%)`;
+    }
+
+    setupSwipe(
+      root,
+      () => { index = clamp(index + 1, 0, max); paint(); },
+      () => { index = clamp(index - 1, 0, max); paint(); }
+    );
+  </script>
+</body>
+</html>

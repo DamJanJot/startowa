@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Watch AI</title>
+  <link rel="stylesheet" href="./assets/watch.css">
+</head>
+<body>
+  <main class="watch-wrap" id="swipeRoot">
+    <header class="head">
+      <div>
+        <div class="head-title">Watch AI</div>
+        <div class="head-sub">Szybkie odpowiedzi</div>
+      </div>
+      <a class="btn" href="./index.html" style="min-height:34px;padding:6px 10px;">Home</a>
+    </header>
+
+    <section class="panel stack">
+      <textarea id="prompt" rows="4" placeholder="Napisz lub podyktuj pytanie..."></textarea>
+      <div class="stack" style="grid-template-columns:1fr 1fr; display:grid;">
+        <button class="btn" id="micBtn">🎤 Mów</button>
+        <button class="btn primary" id="askBtn">Zapytaj AI</button>
+      </div>
+      <div class="panel" style="padding:10px;">
+        <div class="meta" id="status">Gotowe</div>
+        <div id="answer" style="margin-top:8px; line-height:1.45; font-size:14px;"></div>
+      </div>
+      <p class="meta" style="margin:0;">Jeśli brak klucza API na serwerze, zobaczysz odpowiedź demo.</p>
+    </section>
+
+    <nav class="footer-nav">
+      <a class="active" href="./watch-ai.html">AI</a>
+      <a href="./survival.html">Survival</a>
+      <a href="./remote-camera.html">Camera</a>
+      <a href="./pomodoro.html">Pomodoro</a>
+      <a href="./terminal-mode.html">Terminal</a>
+      <a href="./ideas.html">Pomysly</a>
+    </nav>
+  </main>
+
+  <script src="./assets/watch.js"></script>
+  <script>
+    const promptEl = document.getElementById("prompt");
+    const answerEl = document.getElementById("answer");
+    const statusEl = document.getElementById("status");
+
+    async function askAI() {
+      const prompt = promptEl.value.trim();
+      if (!prompt) {
+        statusEl.textContent = "Wpisz pytanie";
+        return;
+      }
+
+      statusEl.textContent = "Myślę...";
+      answerEl.textContent = "";
+
+      try {
+        const res = await fetch("./api/ask-ai.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt })
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          throw new Error(data.error || "Błąd odpowiedzi");
+        }
+
+        answerEl.textContent = data.answer || "Brak odpowiedzi";
+        statusEl.textContent = data.demo ? "Tryb demo" : "Gotowe";
+      } catch (e) {
+        statusEl.textContent = "Błąd";
+        answerEl.textContent = e.message;
+      }
+    }
+
+    document.getElementById("askBtn").addEventListener("click", askAI);
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById("micBtn");
+
+    if (!SpeechRecognition) {
+      micBtn.disabled = true;
+      micBtn.textContent = "🎤 Brak";
+    } else {
+      const rec = new SpeechRecognition();
+      rec.lang = "pl-PL";
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+
+      micBtn.addEventListener("click", () => {
+        statusEl.textContent = "Słucham...";
+        rec.start();
+      });
+
+      rec.addEventListener("result", (ev) => {
+        const text = ev.results[0][0].transcript || "";
+        promptEl.value = text;
+        statusEl.textContent = "Tekst gotowy";
+      });
+
+      rec.addEventListener("error", () => {
+        statusEl.textContent = "Błąd mikrofonu";
+      });
+    }
+
+    setupSwipe(
+      document.getElementById("swipeRoot"),
+      () => { window.location.href = "./survival.html"; },
+      () => { window.location.href = "./index.html"; }
+    );
+  </script>
+</body>
+</html>

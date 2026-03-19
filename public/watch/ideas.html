@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Watch Ideas Tracker</title>
+  <link rel="stylesheet" href="./assets/watch.css">
+</head>
+<body>
+  <main class="watch-wrap" id="swipeRoot">
+    <header class="head">
+      <div>
+        <div class="head-title">Ideas Tracker</div>
+        <div class="head-sub">Szybki zapis pomysłów</div>
+      </div>
+      <a class="btn" href="./index.html" style="min-height:34px;padding:6px 10px;">Home</a>
+    </header>
+
+    <section class="panel stack">
+      <input class="input" id="ideaInput" placeholder="Mam pomysł na...">
+      <div class="stack" style="display:grid; grid-template-columns:1fr 1fr;">
+        <button class="btn primary" id="addBtn">Dodaj</button>
+        <button class="btn warn" id="clearBtn">Wyczyść</button>
+      </div>
+      <div class="panel" style="padding:8px; max-height:320px; overflow:auto;">
+        <div id="ideasList" class="stack"></div>
+      </div>
+      <div class="meta" id="status">Gotowe.</div>
+    </section>
+
+    <nav class="footer-nav">
+      <a href="./watch-ai.html">AI</a>
+      <a href="./survival.html">Survival</a>
+      <a href="./remote-camera.html">Camera</a>
+      <a href="./pomodoro.html">Pomodoro</a>
+      <a href="./terminal-mode.html">Terminal</a>
+      <a class="active" href="./ideas.html">Pomysly</a>
+    </nav>
+  </main>
+
+  <script src="./assets/watch.js"></script>
+  <script>
+    const listEl = document.getElementById("ideasList");
+    const statusEl = document.getElementById("status");
+    const inputEl = document.getElementById("ideaInput");
+
+    async function loadIdeas() {
+      try {
+        const res = await fetch("./api/ideas.php");
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "Błąd ładowania");
+
+        listEl.innerHTML = "";
+        if (!Array.isArray(data.items) || data.items.length === 0) {
+          listEl.innerHTML = '<div class="meta">Brak pomysłów</div>';
+          return;
+        }
+
+        data.items.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "panel";
+          row.style.padding = "8px";
+          row.innerHTML = `<div style="font-size:13px; line-height:1.4;">${item.text}</div><div class="meta" style="margin-top:6px;">${item.createdAt}</div>`;
+          listEl.appendChild(row);
+        });
+      } catch (e) {
+        statusEl.textContent = e.message;
+      }
+    }
+
+    async function addIdea() {
+      const text = inputEl.value.trim();
+      if (!text) {
+        statusEl.textContent = "Wpisz pomysł.";
+        return;
+      }
+
+      try {
+        const res = await fetch("./api/ideas.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "Błąd zapisu");
+        inputEl.value = "";
+        statusEl.textContent = "Zapisano.";
+        await loadIdeas();
+      } catch (e) {
+        statusEl.textContent = e.message;
+      }
+    }
+
+    async function clearIdeas() {
+      try {
+        const res = await fetch("./api/ideas.php", {
+          method: "DELETE"
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "Błąd czyszczenia");
+        statusEl.textContent = "Wyczyszczono.";
+        await loadIdeas();
+      } catch (e) {
+        statusEl.textContent = e.message;
+      }
+    }
+
+    document.getElementById("addBtn").addEventListener("click", addIdea);
+    document.getElementById("clearBtn").addEventListener("click", clearIdeas);
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addIdea();
+    });
+
+    setupSwipe(
+      document.getElementById("swipeRoot"),
+      () => { window.location.href = "./index.html"; },
+      () => { window.location.href = "./terminal-mode.html"; }
+    );
+
+    loadIdeas();
+  </script>
+</body>
+</html>

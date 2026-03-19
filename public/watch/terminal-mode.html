@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Watch Terminal Mode</title>
+  <link rel="stylesheet" href="./assets/watch.css">
+</head>
+<body>
+  <main class="watch-wrap" id="swipeRoot">
+    <header class="head">
+      <div>
+        <div class="head-title">Terminal Mode</div>
+        <div class="head-sub">Pseudo-komendy na zegarku</div>
+      </div>
+      <a class="btn" href="./index.html" style="min-height:34px;padding:6px 10px;">Home</a>
+    </header>
+
+    <section class="panel stack">
+      <div class="panel" id="termOut" style="padding:10px; min-height:250px; overflow:auto; font:12px/1.45 Consolas, monospace; color:#9ef0bf; white-space:pre-wrap;"></div>
+      <input class="input" id="termInput" placeholder="np. status, ping, lights on, help">
+      <div class="stack" style="display:grid; grid-template-columns:1fr 1fr;">
+        <button class="btn primary" id="runBtn">Wykonaj</button>
+        <button class="btn" id="clearBtn">Wyczyść</button>
+      </div>
+      <div class="meta">Komendy: help, status, ping, lights on, lights off, cpu, weather, date, clear</div>
+    </section>
+
+    <nav class="footer-nav">
+      <a href="./watch-ai.html">AI</a>
+      <a href="./survival.html">Survival</a>
+      <a href="./remote-camera.html">Camera</a>
+      <a href="./pomodoro.html">Pomodoro</a>
+      <a class="active" href="./terminal-mode.html">Terminal</a>
+      <a href="./ideas.html">Pomysly</a>
+    </nav>
+  </main>
+
+  <script src="./assets/watch.js"></script>
+  <script>
+    const out = document.getElementById("termOut");
+    const input = document.getElementById("termInput");
+
+    function print(line, cls) {
+      const div = document.createElement("div");
+      div.textContent = line;
+      if (cls === "cmd") div.style.color = "#7dd3fc";
+      if (cls === "err") div.style.color = "#fda4af";
+      out.appendChild(div);
+      out.scrollTop = out.scrollHeight;
+    }
+
+    function runCommand(raw) {
+      const cmd = raw.trim().toLowerCase();
+      if (!cmd) return;
+
+      print(`> ${raw}`, "cmd");
+
+      if (cmd === "help") {
+        print("help | status | ping | lights on|off | cpu | weather | date | clear");
+        return;
+      }
+      if (cmd === "status") {
+        print("server: online\nhome: secure\nalerts: none");
+        return;
+      }
+      if (cmd === "ping") {
+        print("pong 12ms");
+        return;
+      }
+      if (cmd === "lights on") {
+        print("home.lights = ON");
+        return;
+      }
+      if (cmd === "lights off") {
+        print("home.lights = OFF");
+        return;
+      }
+      if (cmd === "cpu") {
+        const n = Math.floor(18 + Math.random() * 32);
+        print(`cpu usage: ${n}%`);
+        return;
+      }
+      if (cmd === "weather") {
+        const t = Math.floor(12 + Math.random() * 15);
+        print(`weather: ${t}C, lekki wiatr`);
+        return;
+      }
+      if (cmd === "date") {
+        print(new Date().toLocaleString("pl-PL"));
+        return;
+      }
+      if (cmd === "clear") {
+        out.innerHTML = "";
+        return;
+      }
+
+      print("unknown command", "err");
+    }
+
+    document.getElementById("runBtn").addEventListener("click", () => {
+      runCommand(input.value);
+      input.value = "";
+      input.focus();
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        runCommand(input.value);
+        input.value = "";
+      }
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      out.innerHTML = "";
+      print("terminal reset");
+    });
+
+    print("watch-terminal ready");
+    print("type: help");
+
+    setupSwipe(
+      document.getElementById("swipeRoot"),
+      () => { window.location.href = "./ideas.html"; },
+      () => { window.location.href = "./pomodoro.html"; }
+    );
+  </script>
+</body>
+</html>

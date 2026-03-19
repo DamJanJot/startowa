@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Watch Survival</title>
+  <link rel="stylesheet" href="./assets/watch.css">
+</head>
+<body>
+  <main class="watch-wrap" id="swipeRoot">
+    <header class="head">
+      <div>
+        <div class="head-title">Watch Survival</div>
+        <div class="head-sub">Swipe = akcje, tap = wybór</div>
+      </div>
+      <a class="btn" href="./index.html" style="min-height:34px;padding:6px 10px;">Home</a>
+    </header>
+
+    <section class="panel stack">
+      <div class="kpi">
+        <div class="kpi-card">
+          <div class="kpi-label">Energia</div>
+          <div class="kpi-value" id="vEnergy">70</div>
+          <div class="bar"><span id="bEnergy" style="width:70%"></span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Jedzenie</div>
+          <div class="kpi-value" id="vFood">55</div>
+          <div class="bar"><span id="bFood" style="width:55%"></span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Woda</div>
+          <div class="kpi-value" id="vWater">60</div>
+          <div class="bar"><span id="bWater" style="width:60%"></span></div>
+        </div>
+      </div>
+
+      <div class="panel" style="padding:10px;">
+        <div class="meta">Dzień: <strong id="vDay">1</strong></div>
+        <div class="meta" id="log" style="margin-top:8px;">Start gry.</div>
+      </div>
+
+      <div class="stack" style="grid-template-columns:1fr 1fr; display:grid;">
+        <button class="btn" id="actRest">😴 Odpocznij</button>
+        <button class="btn" id="actEat">🍖 Jedz</button>
+        <button class="btn" id="actDrink">💧 Pij</button>
+        <button class="btn warn" id="actRisk">⚔ Ryzyko</button>
+      </div>
+
+      <button class="btn primary" id="nextDay">Następny dzień</button>
+    </section>
+
+    <nav class="footer-nav">
+      <a href="./watch-ai.html">AI</a>
+      <a class="active" href="./survival.html">Survival</a>
+      <a href="./remote-camera.html">Camera</a>
+      <a href="./pomodoro.html">Pomodoro</a>
+      <a href="./terminal-mode.html">Terminal</a>
+      <a href="./ideas.html">Pomysly</a>
+    </nav>
+  </main>
+
+  <script src="./assets/watch.js"></script>
+  <script>
+    const KEY = "watch-survival-v1";
+    const state = JSON.parse(localStorage.getItem(KEY) || "null") || {
+      energy: 70,
+      food: 55,
+      water: 60,
+      day: 1
+    };
+
+    function save() {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    }
+
+    function render(message) {
+      document.getElementById("vEnergy").textContent = state.energy;
+      document.getElementById("vFood").textContent = state.food;
+      document.getElementById("vWater").textContent = state.water;
+      document.getElementById("vDay").textContent = state.day;
+
+      document.getElementById("bEnergy").style.width = percent(state.energy);
+      document.getElementById("bFood").style.width = percent(state.food);
+      document.getElementById("bWater").style.width = percent(state.water);
+
+      if (message) {
+        document.getElementById("log").textContent = message;
+      }
+
+      if (state.energy <= 0 || state.food <= 0 || state.water <= 0) {
+        document.getElementById("log").textContent = "Game over. Kliknij następny dzień, aby restart.";
+      }
+    }
+
+    function tweak(fn, msg) {
+      fn();
+      state.energy = clamp(state.energy, 0, 100);
+      state.food = clamp(state.food, 0, 100);
+      state.water = clamp(state.water, 0, 100);
+      save();
+      render(msg);
+    }
+
+    document.getElementById("actRest").addEventListener("click", () => {
+      tweak(() => {
+        state.energy += 14;
+        state.food -= 6;
+        state.water -= 4;
+      }, "Odpoczynek: +energia, -jedzenie, -woda");
+    });
+
+    document.getElementById("actEat").addEventListener("click", () => {
+      tweak(() => {
+        state.food += 15;
+        state.energy += 4;
+      }, "Posiłek: +jedzenie, +energia");
+    });
+
+    document.getElementById("actDrink").addEventListener("click", () => {
+      tweak(() => {
+        state.water += 16;
+        state.energy += 2;
+      }, "Woda: +nawodnienie");
+    });
+
+    document.getElementById("actRisk").addEventListener("click", () => {
+      tweak(() => {
+        const hit = Math.random() < 0.5;
+        if (hit) {
+          state.energy += 12;
+          state.food += 8;
+        } else {
+          state.energy -= 15;
+          state.water -= 10;
+        }
+      }, "Ryzyko wykonane");
+    });
+
+    document.getElementById("nextDay").addEventListener("click", () => {
+      tweak(() => {
+        if (state.energy <= 0 || state.food <= 0 || state.water <= 0) {
+          state.energy = 70;
+          state.food = 55;
+          state.water = 60;
+          state.day = 1;
+          return;
+        }
+
+        state.day += 1;
+        state.energy -= 8;
+        state.food -= 10;
+        state.water -= 11;
+      }, "Dzień zakończony");
+    });
+
+    setupSwipe(
+      document.getElementById("swipeRoot"),
+      () => { window.location.href = "./remote-camera.html"; },
+      () => { window.location.href = "./watch-ai.html"; }
+    );
+
+    render();
+  </script>
+</body>
+</html>
