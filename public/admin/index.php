@@ -408,6 +408,10 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             gap: 8px;
         }
 
+        .mobile-tools-toggle {
+            display: none;
+        }
+
         .top-tools {
             display: flex;
             justify-content: space-between;
@@ -452,7 +456,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         /* ===== Admin FAB ===== */
         .admin-fab {
             position: fixed;
-            bottom: 22px;
+            bottom: 52px;
             right: 22px;
             z-index: 28;
         }
@@ -507,12 +511,12 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         .fab-item:hover { border-color: var(--acc); background: rgba(56,189,248,0.14); }
         .fab-item.fab-danger:hover { border-color: var(--warn); background: rgba(253,164,175,0.12); }
 
-        .admin-fab.open .fi-1  { transform: translate(0px, -70px) scale(1); opacity: 1; transition-delay: 0.00s; }
-        .admin-fab.open .fi-2  { transform: translate(-24px, -62px) scale(1); opacity: 1; transition-delay: 0.03s; }
-        .admin-fab.open .fi-3  { transform: translate(-46px, -46px) scale(1); opacity: 1; transition-delay: 0.06s; }
-        .admin-fab.open .fi-4  { transform: translate(-62px, -24px) scale(1); opacity: 1; transition-delay: 0.09s; }
-        .admin-fab.open .fi-5  { transform: translate(-70px, 0px) scale(1);  opacity: 1; transition-delay: 0.12s; }
-        .admin-fab.open .fi-6  { transform: translate(-58px, 22px) scale(1); opacity: 1; transition-delay: 0.15s; }
+        .admin-fab.open .fi-1  { transform: translate(0px, -62px) scale(1); opacity: 1; transition-delay: 0.00s; }
+        .admin-fab.open .fi-2  { transform: translate(0px, -116px) scale(1); opacity: 1; transition-delay: 0.03s; }
+        .admin-fab.open .fi-3  { transform: translate(0px, -170px) scale(1); opacity: 1; transition-delay: 0.06s; }
+        .admin-fab.open .fi-4  { transform: translate(-54px, -62px) scale(1); opacity: 1; transition-delay: 0.09s; }
+        .admin-fab.open .fi-5  { transform: translate(-54px, -116px) scale(1); opacity: 1; transition-delay: 0.12s; }
+        .admin-fab.open .fi-6  { transform: translate(-54px, -170px) scale(1); opacity: 1; transition-delay: 0.15s; }
 
         .fab-item::after {
             content: attr(title);
@@ -820,23 +824,57 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             position: fixed;
             top: 12px;
             left: 12px;
-            width: 50px;
-            height: 50px;
+            width: 62px;
+            height: 116px;
             overflow: hidden;
             border-radius: 14px;
             padding: 7px;
             border-right: none;
             border-top: 1px solid var(--line);
             z-index: 20;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            align-items: start;
             cursor: pointer;
             box-shadow: 0 2px 12px rgba(0,0,0,0.35);
         }
 
         .app.collapsed .sidebar > * { display: none; }
-        .app.collapsed .sidebar .brand { display: flex; }
+        .app.collapsed .sidebar .brand,
+        .app.collapsed .sidebar .side-foot,
+        .app.collapsed .sidebar #profileTrigger {
+            display: flex;
+        }
+
+        .app.collapsed .sidebar .brand {
+            justify-content: center;
+        }
+
+        .app.collapsed .sidebar .side-foot {
+            display: grid;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .app.collapsed .sidebar .profile-trigger {
+            width: 100%;
+            justify-content: center;
+            padding: 5px;
+            border-radius: 9px;
+        }
+
+        .app.collapsed .sidebar .profile-main {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .app.collapsed .sidebar .profile-meta,
+        .app.collapsed .sidebar .settings-btn,
+        .app.collapsed .sidebar .user-menu,
+        .app.collapsed .sidebar .side-mid {
+            display: none;
+        }
+
         .app.collapsed .collapse-btn { display: none; }
         .app.collapsed .top { padding-left: 74px; }
 
@@ -925,15 +963,63 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
 
             .top-tools {
                 gap: 8px;
+                max-height: 0;
+                opacity: 0;
+                overflow: hidden;
+                border-bottom: none;
+                padding-top: 0;
+                padding-bottom: 0;
+                transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.2s ease;
+            }
+
+            .top-tools.open {
+                max-height: 260px;
+                opacity: 1;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--line);
             }
 
             .top-tools-group {
                 width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px;
             }
 
             .tool-pill {
-                flex: 1 1 auto;
+                width: 100%;
                 justify-content: center;
+                padding: 7px 8px;
+                font-size: 12px;
+            }
+
+            .tool-pill.icon-only {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .mobile-tools-toggle {
+                display: inline-flex;
+                width: auto;
+                min-width: 0;
+                padding: 0 10px;
+                font-size: 12px;
+            }
+
+            .admin-fab {
+                right: 14px;
+                bottom: 48px;
+            }
+
+            .fab-main {
+                width: 52px;
+                height: 52px;
+            }
+
+            .fab-item {
+                width: 42px;
+                height: 42px;
             }
         }
     </style>
@@ -1008,6 +1094,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
                     <!-- <div class="sub">Root + operacje + podglad + terminal</div> -->
                 </div>
                 <div class="top-right">
+                    <button id="mobileToolsToggle" class="btn mobile-tools-toggle" title="Pokaż lub ukryj narzędzia">Narzędzia</button>
                     <button id="toggleTerminalBtn" class="btn icon" title="Terminal">⌨</button>
                     <button id="terminalTabBtn" class="btn icon" title="Terminal w nowej karcie">↗</button>
                     <button id="toRootBtnTop" class="btn icon root" title="Do roota">🏠</button>
@@ -1147,6 +1234,8 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         const collapseBtnEl = document.getElementById('collapseBtn');
         const terminalWindowEl = document.getElementById('terminalWindow');
         const terminalDockItemEl = document.getElementById('terminalDockItem');
+        const topToolsEl = document.querySelector('.top-tools');
+        const mobileToolsToggleEl = document.getElementById('mobileToolsToggle');
 
         const PIN_STORAGE_KEY = 'serverHubPins';
         const TERM_POS_STORAGE_KEY = 'serverHubTermPos';
@@ -2215,6 +2304,28 @@ class ${baseName}Controller
         });
 
         document.getElementById('toRootBtnTop').addEventListener('click', () => loadDir(state.root));
+
+        function syncMobileToolsState() {
+            if (!topToolsEl || !mobileToolsToggleEl) return;
+            if (window.innerWidth > 640) {
+                topToolsEl.classList.remove('open');
+                mobileToolsToggleEl.textContent = 'Narzędzia';
+                return;
+            }
+
+            const isOpen = topToolsEl.classList.contains('open');
+            mobileToolsToggleEl.textContent = isOpen ? 'Ukryj narzędzia' : 'Narzędzia';
+        }
+
+        if (mobileToolsToggleEl && topToolsEl) {
+            mobileToolsToggleEl.addEventListener('click', () => {
+                topToolsEl.classList.toggle('open');
+                syncMobileToolsState();
+            });
+
+            window.addEventListener('resize', syncMobileToolsState);
+            syncMobileToolsState();
+        }
 
         // ===== Admin FAB =====
         const fabEl = document.getElementById('adminFab');
