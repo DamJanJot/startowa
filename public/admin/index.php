@@ -80,7 +80,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         }
 
         .app.collapsed {
-            grid-template-columns: 1fr;
+            grid-template-columns: 64px 1fr;
         }
 
         .sidebar {
@@ -115,6 +115,32 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             font-size: 20px;
             font-weight: 800;
             letter-spacing: 0.3px;
+        }
+
+        .rail-nav {
+            display: none;
+            gap: 8px;
+            align-content: start;
+            justify-items: center;
+            padding-top: 8px;
+        }
+
+        .rail-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--txt);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .rail-btn:hover {
+            border-color: var(--acc);
+            background: rgba(56, 189, 248, 0.14);
         }
 
         .collapse-btn {
@@ -821,28 +847,29 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         }
 
         .app.collapsed .sidebar {
-            position: fixed;
-            top: 12px;
-            left: 12px;
-            width: 62px;
-            height: 116px;
+            position: relative;
+            top: auto;
+            left: auto;
+            width: auto;
+            height: 100%;
             overflow: hidden;
-            border-radius: 14px;
-            padding: 7px;
-            border-right: none;
-            border-top: 1px solid var(--line);
+            border-radius: 0;
+            padding: 10px 8px;
+            border-right: 1px solid var(--line);
+            border-top: none;
             z-index: 20;
             display: grid;
             grid-template-rows: auto 1fr auto;
-            align-items: start;
-            cursor: pointer;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+            align-items: stretch;
+            cursor: default;
+            box-shadow: none;
         }
 
         .app.collapsed .sidebar > * { display: none; }
         .app.collapsed .sidebar .brand,
         .app.collapsed .sidebar .side-foot,
-        .app.collapsed .sidebar #profileTrigger {
+        .app.collapsed .sidebar #profileTrigger,
+        .app.collapsed .sidebar .rail-nav {
             display: flex;
         }
 
@@ -854,6 +881,10 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             display: grid;
             width: 100%;
             margin-top: auto;
+        }
+
+        .app.collapsed .sidebar .rail-nav {
+            display: grid;
         }
 
         .app.collapsed .sidebar .profile-trigger {
@@ -875,12 +906,16 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             display: none;
         }
 
-        .app.collapsed .collapse-btn { display: none; }
-        .app.collapsed .top { padding-left: 74px; }
+        .app.collapsed .collapse-btn {
+            display: block;
+            left: 64px;
+            top: 14px;
+        }
+        .app.collapsed .top { padding-left: 14px; }
 
         .app.collapsed .sidebar:hover {
             border-color: var(--acc);
-            box-shadow: 0 4px 18px rgba(56,189,248,0.35);
+            box-shadow: none;
         }
 
         @media (max-width: 1020px) {
@@ -1038,6 +1073,13 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             <div class="brand">
                 <div class="logo">H</div>
                 <div class="brand-name hide-when-collapsed">Server Hub</div>
+            </div>
+
+            <div class="rail-nav">
+                <button class="rail-btn" id="railRootBtn" title="Do roota">🏠</button>
+                <button class="rail-btn" id="railRefreshBtn" title="Odśwież folder">↻</button>
+                <button class="rail-btn" id="railTerminalBtn" title="Terminal">⌨</button>
+                <button class="rail-btn" id="railToolsBtn" title="Akcje">🧰</button>
             </div>
 
             <div class="side-mid">
@@ -1236,6 +1278,10 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         const terminalDockItemEl = document.getElementById('terminalDockItem');
         const topToolsEl = document.querySelector('.top-tools');
         const mobileToolsToggleEl = document.getElementById('mobileToolsToggle');
+        const railRootBtnEl = document.getElementById('railRootBtn');
+        const railRefreshBtnEl = document.getElementById('railRefreshBtn');
+        const railTerminalBtnEl = document.getElementById('railTerminalBtn');
+        const railToolsBtnEl = document.getElementById('railToolsBtn');
 
         const PIN_STORAGE_KEY = 'serverHubPins';
         const TERM_POS_STORAGE_KEY = 'serverHubTermPos';
@@ -2283,14 +2329,6 @@ class ${baseName}Controller
             document.getElementById('profileTrigger').classList.toggle('compact', appEl.classList.contains('collapsed'));
         });
 
-        document.querySelector('.sidebar').addEventListener('click', () => {
-            if (appEl.classList.contains('collapsed')) {
-                appEl.classList.remove('collapsed');
-                collapseBtnEl.textContent = '<';
-                document.getElementById('profileTrigger').classList.remove('compact');
-            }
-        });
-
         document.getElementById('profileTrigger').addEventListener('click', () => {
             if (appEl.classList.contains('collapsed')) {
                 return;
@@ -2325,6 +2363,36 @@ class ${baseName}Controller
 
             window.addEventListener('resize', syncMobileToolsState);
             syncMobileToolsState();
+        }
+
+        if (railRootBtnEl) {
+            railRootBtnEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                loadDir(state.root);
+            });
+        }
+
+        if (railRefreshBtnEl) {
+            railRefreshBtnEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                loadDir(state.current || state.root);
+            });
+        }
+
+        if (railTerminalBtnEl) {
+            railTerminalBtnEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleTerminalWindow();
+            });
+        }
+
+        if (railToolsBtnEl) {
+            railToolsBtnEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                appEl.classList.remove('collapsed');
+                collapseBtnEl.textContent = '<';
+                document.getElementById('profileTrigger').classList.remove('compact');
+            });
         }
 
         // ===== Admin FAB =====
