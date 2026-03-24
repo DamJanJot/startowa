@@ -54,6 +54,18 @@ if (is_file(__DIR__ . '/../core/access_control.php')) {
             exit();
         }
     }
+
+    if (!function_exists('startowa_should_redirect_to_app')) {
+        function startowa_should_redirect_to_app(string $role): ?string
+        {
+            $roleAppsMap = [
+                'uczen' => 'neuronetix',
+                'nauczyciel' => 'neuronetix',
+            ];
+
+            return $roleAppsMap[$role] ?? null;
+        }
+    }
 }
 
 startowa_start_session();
@@ -84,7 +96,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             startowa_refresh_access_cache();
 
-            if (startowa_has_app_access('admin_panel') && in_array($_SESSION['rola'], ['admin', 'owner'], true)) {
+            $redirectApp = startowa_should_redirect_to_app($_SESSION['rola']);
+            if ($redirectApp === 'neuronetix') {
+                startowa_redirect('/neuronetix/index.php');
+            } elseif (startowa_has_app_access('admin_panel') && in_array($_SESSION['rola'], ['admin', 'owner'], true)) {
                 startowa_redirect('public/admin/index.php');
             }
 

@@ -12,6 +12,7 @@ const STARTOWA_APPS = [
     'taskora' => 'Taskora',
     'admin_panel' => 'Panel admina',
     'server_hub' => 'Server Hub',
+    'neuronetix' => 'NeuroNetix',
 ];
 
 function startowa_start_session(): void
@@ -80,6 +81,16 @@ function startowa_default_role_apps(string $role): array
     ];
 
     return $map[$role] ?? $map['user'];
+}
+
+function startowa_should_redirect_to_app(string $role): ?string
+{
+    $roleAppsMap = [
+        'uczen' => 'neuronetix',
+        'nauczyciel' => 'neuronetix',
+    ];
+
+    return $roleAppsMap[$role] ?? null;
 }
 
 function startowa_fetch_role_apps(PDO $pdo, string $role): ?array
