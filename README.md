@@ -103,6 +103,49 @@ startowa/
 - Limity rozmiarów skanowania i przetwarzania
 - Sesje PHP z weryfikacją logowania
 
+## Role i dostępy aplikacji (RBAC)
+
+Projekt ma zintegrowany model dostępu oparty o role i przypisania aplikacji:
+
+- centralna logika: `core/access_control.php`
+- panel użytkownika po loginie: `public/index.php`
+- panel admina (Server Hub): `public/admin/index.php`
+- zarządzanie rolami/dostępami: `public/admin/access.php`
+- linki demo do portfolio i GitHub: `public/admin/demos.php`
+
+### Wdrożenie RBAC na CBA
+
+1. Zaimportuj SQL: `database/add_access_control_tables.sql`.
+2. Zaloguj się jako `admin` lub `owner`.
+3. W panelu admina kliknij `Dostepy` i przypisz:
+   - aplikacje do ról,
+   - aplikacje bezpośrednio do użytkowników.
+
+Jeśli użytkownik nie ma przypisanej aplikacji, nie zobaczy jej na dashboardzie. API panelu plików (`public/api.php`) również jest blokowane dla kont bez dostępu `admin_panel` lub `server_hub`.
+
+## Linki demo aplikacji
+
+Panel `public/admin/demos.php` pozwala tworzyć publiczne linki demo, które:
+
+- działają z domeny startowej, np. `.../demo.php?demo=twoj-klucz`,
+- przekierowują do autologinu wybranej aplikacji,
+- potrafią automatycznie wygenerować token autologinu dla kompatybilnej aplikacji,
+- mogą zostać wyłączone lub wygaszone,
+- zliczają wejścia.
+
+### Jak używać
+
+1. Przygotuj konto demo i przykładowe dane w aplikacji docelowej.
+2. Dla kompatybilnych aplikacji wpisz katalog aplikacji, konto demo i docelowy redirect po loginie.
+3. Panel sam utworzy wpis w tabeli `autologiny` aplikacji docelowej albo przyjmie gotowy token ręcznie.
+4. Skopiuj publiczny link i użyj go w portfolio albo na GitHub.
+
+### SQL dla panelu demo
+
+Jeśli chcesz wdrożyć tabelę ręcznie, zaimportuj:
+
+- `database/add_demo_links_tables.sql`
+
 ## API Backend
 
 Plik `public/api.php` obsługuje akcje:

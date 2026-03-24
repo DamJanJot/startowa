@@ -1,24 +1,62 @@
 <?php
-session_start();
 header('Content-Type: text/html; charset=UTF-8');
 
-require_once __DIR__ . '/../core/env_loader.php';
+if (is_file(__DIR__ . '/../core/access_control.php')) {
+    require_once __DIR__ . '/../core/access_control.php';
+} else {
+    require_once __DIR__ . '/../core/db.php';
 
-$host = getenv('DB_HOST');
-$dbname = getenv('DB_NAME');
-$username = getenv('DB_USER');
-$password = getenv('DB_PASS');
+    if (!function_exists('startowa_start_session')) {
+        function startowa_start_session(): void
+        {
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
+            }
+        }
+    }
 
-if (!$host || !$dbname || !$username) {
-    die('Brak konfiguracji DB w zmiennych środowiskowych (DB_HOST, DB_NAME, DB_USER, DB_PASS).');
+    if (!function_exists('startowa_normalize_role')) {
+        function startowa_normalize_role(?string $role): string
+        {
+            $normalized = strtolower(trim((string) $role));
+            return $normalized !== '' ? $normalized : 'user';
+        }
+    }
+
+    if (!function_exists('startowa_refresh_access_cache')) {
+        function startowa_refresh_access_cache(): void
+        {
+            unset($_SESSION['access']);
+        }
+    }
+
+    if (!function_exists('startowa_has_app_access')) {
+        function startowa_has_app_access(string $appKey): bool
+        {
+            $role = startowa_normalize_role((string) ($_SESSION['rola'] ?? 'user'));
+            if ($appKey === 'admin_panel') {
+                return in_array($role, ['admin', 'owner'], true);
+            }
+
+            return true;
+        }
+    }
+
+    if (!function_exists('startowa_redirect')) {
+        function startowa_redirect(string $path): void
+        {
+            $normalized = ltrim($path, '/');
+            if (strpos($normalized, 'public/') === 0) {
+                $normalized = substr($normalized, 7);
+            }
+
+            header('Location: ' . $normalized);
+            exit();
+        }
+    }
 }
 
-$conn = new mysqli($host, $username, $password, $dbname);
-$conn->set_charset("utf8mb4");
-
-if ($conn->connect_error) {
-    die("Połączenie nieudane: " . $conn->connect_error);
-}
+startowa_start_session();
 
 $errorMessage = '';
 $successMessage = isset($_GET['registered']) && $_GET['registered'] === '1'
@@ -32,45 +70,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($email === '' || $haslo === '') {
         $errorMessage = 'Uzupełnij adres e-mail i hasło.';
     } else {
-        $sql = "SELECT id, imie, nazwisko, haslo, rola FROM uzytkownicy WHERE email = ?";
-        $stmt = $conn->prepare($sql);
+        $stmt = $pdo->prepare('SELECT id, imie, nazwisko, email, haslo, rola FROM uzytkownicy WHERE email = ? LIMIT 1');
+        $stmt->execute([$email]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$stmt) {
-            $errorMessage = 'Wystąpił błąd podczas przygotowania zapytania.';
-        } else {
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
+        if ($row && password_verify($haslo, (string) ($row['haslo'] ?? ''))) {
+            $_SESSION['loggedin'] = true;
+            $_SESSION['id'] = (int) $row['id'];
+            $_SESSION['imie'] = (string) ($row['imie'] ?? '');
+            $_SESSION['nazwisko'] = (string) ($row['nazwisko'] ?? '');
+            $_SESSION['email'] = (string) ($row['email'] ?? '');
+            $_SESSION['rola'] = startowa_normalize_role((string) ($row['rola'] ?? 'user'));
 
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
+            startowa_refresh_access_cache();
 
-                if (password_verify($haslo, $row['haslo'])) {
-                    $_SESSION['loggedin'] = true;
-                    $_SESSION['id'] = $row['id'];
-                    $_SESSION['imie'] = $row['imie'];
-                    $_SESSION['nazwisko'] = $row['nazwisko'];
-                    $_SESSION['rola'] = $row['rola'];
-
-                    if ($row['rola'] === 'admin') {
-                        header("Location: admin/index.php");
-                    } else {
-                        header("Location: index.php?id=" . $row['id']);
-                    }
-                    exit();
-                } else {
-                    $errorMessage = 'Błędne hasło.';
-                }
-            } else {
-                $errorMessage = 'Nie znaleziono użytkownika z tym adresem e-mail.';
+            if (startowa_has_app_access('admin_panel') && in_array($_SESSION['rola'], ['admin', 'owner'], true)) {
+                startowa_redirect('public/admin/index.php');
             }
 
-            $stmt->close();
+            startowa_redirect('public/index.php');
+        } else {
+            $errorMessage = 'Nieprawidłowy email lub hasło.';
         }
     }
 }
-
-$conn->close();
 ?>
 <!doctype html>
 <html lang="pl">
