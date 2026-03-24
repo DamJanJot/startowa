@@ -3,97 +3,533 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Watch Apps</title>
+  <title>Watch OS</title>
   <link rel="stylesheet" href="./assets/watch.css">
 </head>
 <body>
-  <main class="watch-wrap" id="swipeRoot">
-    <header class="head">
-      <div>
-        <div class="head-title">Watch OS</div>
-        <div class="head-sub">Swipe lewo/prawo między apkami</div>
+  <main class="watch-os" id="swipeRoot">
+    <!-- Okrągła tarcza zegarka -->
+    <div class="watch-dial">
+      <!-- Przyciski dookoła -->
+      <nav class="watch-buttons">
+        <button class="btn-top" data-app="0" title="Voice Notes">🎤</button>
+        <button class="btn-top-right" data-app="1" title="Dictaphone">🎙️</button>
+        <button class="btn-right" data-app="2" title="Camera Hub">📷</button>
+        <button class="btn-bottom-right" data-app="3" title="Repo Watch">📦</button>
+        <button class="btn-bottom" data-app="4" title="Quick Timer">⏱️</button>
+      </nav>
+
+      <!-- Główny ekran w środku -->
+      <div class="screen-container" id="track">
+        <!-- App 1: Voice Notes -->
+        <section class="app-screen" data-app="0">
+          <div class="app-header">
+            <h2>Voice Notes</h2>
+          </div>
+          <div class="app-content">
+            <button class="btn-voice" id="recordVoiceBtn">🎤 Nagrywaj</button>
+            <textarea id="voiceNotesText" class="input" placeholder="Tutaj pojawi sie tylko transkrypcja z mikrofonu" rows="4" readonly></textarea>
+            <button class="btn primary" id="saveVoiceBtn">💾 Zapisz</button>
+            <div id="notesList" class="notes-list"></div>
+          </div>
+        </section>
+
+        <!-- App 2: Dictaphone -->
+        <section class="app-screen" data-app="1">
+          <div class="app-header">
+            <h2>Dyktafon</h2>
+          </div>
+          <div class="app-content">
+            <button class="btn-voice" id="recordDictBtn">🔴 Nagrywaj</button>
+            <div id="recordingTime" class="recording-time">00:00</div>
+            <button class="btn primary" id="stopDictBtn" style="display:none;">⏹️ Stop</button>
+            <div id="recordingsList" class="recordings-list"></div>
+          </div>
+        </section>
+
+        <!-- App 3: Camera Hub -->
+        <section class="app-screen" data-app="2">
+          <div class="app-header">
+            <h2>Camera Hub</h2>
+          </div>
+          <div class="app-content">
+            <div class="camera-split">
+              <div class="camera-view" id="phoneCamera">
+                <p style="text-align:center; color: var(--muted);">Telefon</p>
+              </div>
+              <div class="camera-view" id="watchCamera">
+                <p style="text-align:center; color: var(--muted);">Zegarek</p>
+              </div>
+            </div>
+            <button class="btn primary" id="switchCameraBtn">🔄 Przełącz</button>
+          </div>
+        </section>
+
+        <!-- App 4: Repo Watcher -->
+        <section class="app-screen" data-app="3">
+          <div class="app-header">
+            <h2>Repo Branch</h2>
+          </div>
+          <div class="app-content">
+            <div class="repo-info">
+              <div class="kpi">
+                <div class="kpi-card">
+                  <div class="kpi-label">Branch</div>
+                  <div class="kpi-value" id="branchName">-</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">Commits</div>
+                  <div class="kpi-value" id="commitCount">0</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">Status</div>
+                  <div class="kpi-value" id="repoStatus">?</div>
+                </div>
+              </div>
+            </div>
+            <button class="btn primary" id="refreshRepoBtn">🔄 Odśwież</button>
+          </div>
+        </section>
+
+        <!-- App 5: Quick Timer -->
+        <section class="app-screen" data-app="4">
+          <div class="app-header">
+            <h2>Quick Timer</h2>
+          </div>
+          <div class="app-content">
+            <div class="timer-matrix-wrap">
+              <canvas id="timerMatrixCanvas" class="timer-matrix-canvas" aria-hidden="true"></canvas>
+              <div class="timer-overlay">
+                <div class="timer-display" id="timerDisplay">05:00</div>
+                <div class="timer-buttons">
+                  <button class="btn" id="timerDecBtn">−</button>
+                  <button class="btn primary" id="timerStartBtn">▶ Start</button>
+                  <button class="btn" id="timerIncBtn">+</button>
+                </div>
+              </div>
+            </div>
+            <input type="range" id="timerRange" class="timer-range" min="1" max="60" value="5">
+          </div>
+        </section>
       </div>
-      <span class="badge">⌚ v1</span>
-    </header>
-
-    <section class="panel card-switch">
-      <div class="switch-track" id="track">
-        <article class="switch-item">
-          <div class="stack">
-            <h3 style="margin:0;">Watch AI</h3>
-            <p class="meta" style="margin:0;">Krótka odpowiedź AI z tekstu lub mowy.</p>
-            <a class="btn primary" href="./watch-ai.html">Otwórz</a>
-          </div>
-        </article>
-
-        <article class="switch-item">
-          <div class="stack">
-            <h3 style="margin:0;">Watch Survival</h3>
-            <p class="meta" style="margin:0;">Gra: energia, jedzenie, woda, dzień.</p>
-            <a class="btn primary" href="./survival.html">Otwórz</a>
-          </div>
-        </article>
-
-        <article class="switch-item">
-          <div class="stack">
-            <h3 style="margin:0;">Remote Camera</h3>
-            <p class="meta" style="margin:0;">Podgląd streamu z telefonu/PC po URL.</p>
-            <a class="btn primary" href="./remote-camera.html">Otwórz</a>
-          </div>
-        </article>
-
-        <article class="switch-item">
-          <div class="stack">
-            <h3 style="margin:0;">Watch Pomodoro</h3>
-            <p class="meta" style="margin:0;">Timer focus/break do pracy i nauki.</p>
-            <a class="btn primary" href="./pomodoro.html">Otwórz</a>
-          </div>
-        </article>
-
-        <article class="switch-item">
-          <div class="stack">
-            <h3 style="margin:0;">Terminal Mode</h3>
-            <p class="meta" style="margin:0;">Pseudo-komendy i hacker vibe.</p>
-            <a class="btn primary" href="./terminal-mode.html">Otwórz</a>
-          </div>
-        </article>
-
-        <article class="switch-item">
-          <div class="stack">
-            <h3 style="margin:0;">Ideas Tracker</h3>
-            <p class="meta" style="margin:0;">Szybki zapis pomysłów z zegarka.</p>
-            <a class="btn primary" href="./ideas.html">Otwórz</a>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <nav class="footer-nav">
-      <a href="./watch-ai.html">AI</a>
-      <a href="./survival.html">Survival</a>
-      <a href="./remote-camera.html">Camera</a>
-      <a href="./pomodoro.html">Pomodoro</a>
-      <a href="./terminal-mode.html">Terminal</a>
-      <a href="./ideas.html">Pomysly</a>
-    </nav>
+    </div>
   </main>
 
   <script src="./assets/watch.js"></script>
   <script>
+    // === CAROUSEL ===
     const track = document.getElementById("track");
     const root = document.getElementById("swipeRoot");
-    let index = 0;
-    const max = 5;
+    const buttons = document.querySelectorAll(".watch-buttons button");
+    let currentApp = 0;
+    const totalApps = 5;
 
-    function paint() {
-      track.style.transform = `translateX(-${index * 100}%)`;
+    function switchApp(index) {
+      currentApp = clamp(index, 0, totalApps - 1);
+      
+      // Update button states and app screen visibility
+      buttons.forEach((btn, i) => {
+        if (i === currentApp) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+      
+      // Update app screens opacity
+      document.querySelectorAll(".app-screen").forEach((screen, i) => {
+        if (i === currentApp) {
+          screen.style.opacity = "1";
+          screen.style.pointerEvents = "all";
+        } else {
+          screen.style.opacity = "0";
+          screen.style.pointerEvents = "none";
+        }
+      });
+
+      setMatrixRunning(currentApp === 4);
     }
 
+    // Swipe handling
     setupSwipe(
       root,
-      () => { index = clamp(index + 1, 0, max); paint(); },
-      () => { index = clamp(index - 1, 0, max); paint(); }
+      () => switchApp(currentApp + 1),
+      () => switchApp(currentApp - 1)
     );
+
+    // Button clicks
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const appIndex = parseInt(btn.getAttribute("data-app"));
+        switchApp(appIndex);
+      });
+    });
+
+    // Init
+    switchApp(0);
+
+    // === SERVER API ===
+    const API_BASE = "./api/storage.php";
+    const IS_FILE_PROTOCOL = window.location.protocol === "file:";
+
+    function serverHint() {
+      return "Uruchom przez HTTP (np. http://127.0.0.1:8091/watch/index.html), a nie file://";
+    }
+
+    async function apiJson(url, options = {}) {
+      if (IS_FILE_PROTOCOL) {
+        throw new Error(serverHint());
+      }
+
+      let res;
+      try {
+        res = await fetch(url, options);
+      } catch (e) {
+        throw new Error(`Brak polaczenia z API. ${serverHint()}`);
+      }
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error || "Blad serwera";
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // === VOICE NOTES ===
+    let voiceRecognition = false;
+    let recognitionRunning = false;
+    const recordVoiceBtn = document.getElementById("recordVoiceBtn");
+    const voiceNotesText = document.getElementById("voiceNotesText");
+    const saveVoiceBtn = document.getElementById("saveVoiceBtn");
+    const notesList = document.getElementById("notesList");
+
+    recordVoiceBtn.addEventListener("click", () => {
+      if (!recognitionRunning) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          alert("Twoja przeglądarka nie obsługuje rozpoznawania mowy");
+          return;
+        }
+        voiceRecognition = new SpeechRecognition();
+        voiceRecognition.lang = "pl-PL";
+        voiceRecognition.continuous = true;
+        voiceRecognition.interimResults = false;
+        voiceNotesText.value = "";
+        voiceNotesText.dataset.fromVoice = "1";
+
+        voiceRecognition.onresult = (e) => {
+          let transcript = "";
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            transcript += e.results[i][0].transcript;
+          }
+          if (transcript.trim() !== "") {
+            voiceNotesText.value = `${voiceNotesText.value} ${transcript}`.trim();
+          }
+        };
+
+        voiceRecognition.onend = () => {
+          if (recognitionRunning) {
+            recognitionRunning = false;
+            recordVoiceBtn.textContent = "🎤 Nagrywaj";
+            recordVoiceBtn.classList.remove("active");
+          }
+        };
+
+        voiceRecognition.start();
+        recognitionRunning = true;
+        recordVoiceBtn.textContent = "⏹️ Stop";
+        recordVoiceBtn.classList.add("active");
+      } else {
+        recognitionRunning = false;
+        if (voiceRecognition) {
+          voiceRecognition.stop();
+        }
+        recordVoiceBtn.textContent = "🎤 Nagrywaj";
+        recordVoiceBtn.classList.remove("active");
+      }
+    });
+
+    saveVoiceBtn.addEventListener("click", async () => {
+      const text = voiceNotesText.value.trim();
+      const fromVoice = voiceNotesText.dataset.fromVoice === "1";
+      if (!fromVoice) {
+        alert("Ten panel zapisuje tylko tekst z nagrania mowy. Najpierw kliknij Nagrywaj.");
+        return;
+      }
+      if (!text) {
+        alert("Brak transkrypcji do zapisu. Nagraj glos i sprobuj ponownie.");
+        return;
+      }
+
+      try {
+        await apiJson(`${API_BASE}?resource=notes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        voiceNotesText.value = "";
+        voiceNotesText.dataset.fromVoice = "0";
+        await loadVoiceNotes();
+      } catch (err) {
+        alert(`Nie udalo sie zapisac notatki: ${err.message}`);
+      }
+    });
+
+    async function loadVoiceNotes() {
+      try {
+        const data = await apiJson(`${API_BASE}?resource=notes`);
+        const notes = Array.isArray(data.items) ? data.items : [];
+        notesList.innerHTML = notes.map((n) => 
+        `<div class="note-item"><small>${escapeHtml(n.date || "")}</small><p>${escapeHtml(n.text || "")}</p><button onclick="deleteNote(${Number(n.id)})" class="btn-small">🗑️</button></div>`
+      ).join("");
+      } catch (err) {
+        notesList.innerHTML = `<div class="note-item"><small>Blad</small><p>${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+    
+    window.deleteNote = async (id) => {
+      try {
+        await apiJson(`${API_BASE}?resource=notes`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id })
+        });
+        await loadVoiceNotes();
+      } catch (err) {
+        alert(`Nie udalo sie usunac notatki: ${err.message}`);
+      }
+    };
+
+    loadVoiceNotes();
+
+    // === DICTAPHONE ===
+    let mediaRecorder = null;
+    let audioChunks = [];
+    const recordDictBtn = document.getElementById("recordDictBtn");
+    const stopDictBtn = document.getElementById("stopDictBtn");
+    const recordingTime = document.getElementById("recordingTime");
+    const recordingsList = document.getElementById("recordingsList");
+    let recordingSeconds = 0;
+    let recordingInterval = null;
+
+    recordDictBtn.addEventListener("click", async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+          const form = new FormData();
+          form.append("audio", audioBlob, `recording-${Date.now()}.webm`);
+
+          try {
+            if (IS_FILE_PROTOCOL) {
+              throw new Error(serverHint());
+            }
+
+            await fetch(`${API_BASE}?resource=recordings`, {
+              method: "POST",
+              body: form
+            }).then(async (res) => {
+              const data = await res.json().catch(() => ({}));
+              if (!res.ok) {
+                throw new Error(data.error || "Blad uploadu audio");
+              }
+            });
+            await loadRecordings();
+          } catch (err) {
+            alert(`Nie udalo sie wyslac nagrania: ${err.message}`);
+          }
+
+          stream.getTracks().forEach(t => t.stop());
+        };
+        
+        mediaRecorder.start();
+        recordDictBtn.style.display = "none";
+        stopDictBtn.style.display = "block";
+        recordingSeconds = 0;
+        recordingTime.textContent = "00:00";
+        recordingInterval = setInterval(() => {
+          recordingSeconds++;
+          const m = Math.floor(recordingSeconds / 60).toString().padStart(2, "0");
+          const s = (recordingSeconds % 60).toString().padStart(2, "0");
+          recordingTime.textContent = `${m}:${s}`;
+        }, 1000);
+      } catch (err) {
+        alert("Brak dostępu do mikrofonu");
+      }
+    });
+
+    stopDictBtn.addEventListener("click", () => {
+      mediaRecorder.stop();
+      clearInterval(recordingInterval);
+      recordDictBtn.style.display = "block";
+      stopDictBtn.style.display = "none";
+    });
+
+    async function loadRecordings() {
+      try {
+        const data = await apiJson(`${API_BASE}?resource=recordings`);
+        const recordings = Array.isArray(data.items) ? data.items : [];
+        recordingsList.innerHTML = recordings.map((r) => 
+        `<div class="recording-item"><small>${escapeHtml(r.date || "")}</small><audio controls style="width:100%; margin: 4px 0;"><source src="${escapeHtml(r.url || "")}"></audio><button onclick="deleteRecording('${escapeHtml(r.id || "")}')" class="btn-small">🗑️</button></div>`
+      ).join("");
+      } catch (err) {
+        recordingsList.innerHTML = `<div class="recording-item"><small>Blad</small><p>${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    window.deleteRecording = async (id) => {
+      try {
+        await apiJson(`${API_BASE}?resource=recordings`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id })
+        });
+        await loadRecordings();
+      } catch (err) {
+        alert(`Nie udalo sie usunac nagrania: ${err.message}`);
+      }
+    };
+
+    loadRecordings();
+
+    // === QUICK TIMER ===
+    let timerInterval = null;
+    let timerSeconds = 300;
+    const timerDisplay = document.getElementById("timerDisplay");
+    const timerStartBtn = document.getElementById("timerStartBtn");
+    const timerIncBtn = document.getElementById("timerIncBtn");
+    const timerDecBtn = document.getElementById("timerDecBtn");
+    const timerRange = document.getElementById("timerRange");
+    const timerMatrixCanvas = document.getElementById("timerMatrixCanvas");
+
+    let matrixAnimationFrame = null;
+    let matrixDrops = [];
+    const matrixChars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&*+-<>";
+
+    function resizeMatrixCanvas() {
+      if (!timerMatrixCanvas) return;
+      const rect = timerMatrixCanvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      timerMatrixCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      timerMatrixCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+
+      const columns = Math.max(8, Math.floor(rect.width / 10));
+      matrixDrops = Array.from({ length: columns }, () => Math.floor(Math.random() * 20));
+    }
+
+    function drawMatrixFrame() {
+      if (!timerMatrixCanvas) return;
+      const ctx = timerMatrixCanvas.getContext("2d");
+      if (!ctx) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const width = timerMatrixCanvas.width / dpr;
+      const height = timerMatrixCanvas.height / dpr;
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      ctx.fillStyle = "rgba(1, 10, 15, 0.22)";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = "#49ffa8";
+      ctx.font = "10px monospace";
+
+      for (let i = 0; i < matrixDrops.length; i++) {
+        const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+        const x = i * 10;
+        const y = matrixDrops[i] * 10;
+        ctx.fillText(char, x, y);
+
+        if (y > height && Math.random() > 0.975) {
+          matrixDrops[i] = 0;
+        } else {
+          matrixDrops[i] += 1;
+        }
+      }
+
+      matrixAnimationFrame = requestAnimationFrame(drawMatrixFrame);
+    }
+
+    function setMatrixRunning(shouldRun) {
+      if (!timerMatrixCanvas) return;
+
+      if (shouldRun) {
+        if (matrixAnimationFrame) return;
+        resizeMatrixCanvas();
+        drawMatrixFrame();
+        return;
+      }
+
+      if (matrixAnimationFrame) {
+        cancelAnimationFrame(matrixAnimationFrame);
+        matrixAnimationFrame = null;
+      }
+    }
+
+    window.addEventListener("resize", () => {
+      if (currentApp === 4) {
+        resizeMatrixCanvas();
+      }
+    });
+
+    function updateTimerDisplay() {
+      const m = Math.floor(timerSeconds / 60).toString().padStart(2, "0");
+      const s = (timerSeconds % 60).toString().padStart(2, "0");
+      timerDisplay.textContent = `${m}:${s}`;
+    }
+
+    timerStartBtn.addEventListener("click", () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerStartBtn.textContent = "▶ Start";
+        return;
+      }
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        updateTimerDisplay();
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          alert("Czas!");
+          timerSeconds = parseInt(timerRange.value) * 60;
+          updateTimerDisplay();
+          timerStartBtn.textContent = "▶ Start";
+        }
+      }, 1000);
+      timerStartBtn.textContent = "⏸ Pauza";
+    });
+
+    timerIncBtn.addEventListener("click", () => {
+      timerRange.value = Math.min(60, parseInt(timerRange.value) + 1);
+      timerSeconds = parseInt(timerRange.value) * 60;
+      updateTimerDisplay();
+    });
+
+    timerDecBtn.addEventListener("click", () => {
+      timerRange.value = Math.max(1, parseInt(timerRange.value) - 1);
+      timerSeconds = parseInt(timerRange.value) * 60;
+      updateTimerDisplay();
+    });
+
+    timerRange.addEventListener("input", () => {
+      timerSeconds = parseInt(timerRange.value) * 60;
+      updateTimerDisplay();
+    });
   </script>
 </body>
 </html>
