@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS startowa_demo_links (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    label VARCHAR(150) NOT NULL,
+    public_key VARCHAR(64) NOT NULL UNIQUE,
+    app_key VARCHAR(50) NOT NULL,
+    app_name VARCHAR(120) NOT NULL,
+    target_base_url VARCHAR(255) NOT NULL,
+    autologin_path VARCHAR(255) NOT NULL DEFAULT 'core/autologin-redirect.php',
+    target_autologin_token VARCHAR(255) NOT NULL,
+    demo_account_label VARCHAR(120) DEFAULT NULL,
+    description TEXT DEFAULT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    click_count INT NOT NULL DEFAULT 0,
+    last_used_at DATETIME DEFAULT NULL,
+    expires_at DATETIME DEFAULT NULL,
+    created_by_user_id INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_public_key (public_key),
+    INDEX idx_app_key (app_key),
+    INDEX idx_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

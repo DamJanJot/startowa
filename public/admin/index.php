@@ -1,14 +1,22 @@
 <?php
-session_start();
 header('Content-Type: text/html; charset=UTF-8');
 
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    header('Location: ../login.php');
-    exit();
-}
-if (!isset($_SESSION['rola']) || $_SESSION['rola'] !== 'admin') {
-    header('Location: ../index.php');
-    exit();
+if (is_file(__DIR__ . '/../../core/access_control.php')) {
+    require_once __DIR__ . '/../../core/access_control.php';
+    startowa_require_admin_panel();
+} else {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        header('Location: ../login.php');
+        exit();
+    }
+    $fallbackRole = strtolower(trim((string) ($_SESSION['rola'] ?? 'user')));
+    if (!in_array($fallbackRole, ['admin', 'owner'], true)) {
+        header('Location: ../index.php');
+        exit();
+    }
 }
 
 $userName = $_SESSION['imie'] ?? 'Uzytkownik';
@@ -89,7 +97,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             backdrop-filter: blur(10px);
             padding: 12px;
             display: grid;
-            grid-template-rows: auto 1fr auto;
+            grid-template-rows: auto auto 1fr auto;
             gap: 10px;
             min-height: 0;
         }
@@ -415,6 +423,55 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             min-height: 0;
         }
 
+        .main.dashboard-mode .explorer-only {
+            display: none !important;
+        }
+
+        .main.explorer-mode .dashboard-view {
+            display: none !important;
+        }
+
+        .dashboard-view {
+            padding: 12px 14px;
+            display: grid;
+            gap: 10px;
+            align-content: start;
+            overflow: auto;
+        }
+
+        .dashboard-head {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+        }
+
+        .dashboard-card {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(8, 17, 35, 0.85);
+            padding: 12px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .dashboard-card h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .dashboard-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
         .top {
             border-bottom: 1px solid var(--line);
             padding: 12px 14px;
@@ -432,6 +489,102 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .panel-nav {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px;
+            display: grid;
+            gap: 4px;
+        }
+
+        .panel-nav h4 {
+            margin: 0;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .panel-nav-btn {
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--panel);
+            color: var(--txt);
+            padding: 6px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-align: left;
+            min-height: 34px;
+        }
+
+        .panel-nav-btn:hover {
+            border-color: var(--acc);
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        .panel-nav-btn.active {
+            border-color: rgba(56, 189, 248, 0.75);
+            background: rgba(56, 189, 248, 0.2);
+        }
+
+        .panel-nav-icon {
+            width: 16px;
+            min-width: 16px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .admin-panel-btn {
+            font-size: 12px;
+            padding: 7px 10px;
+        }
+
+        .tasks-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 7, 18, 0.62);
+            backdrop-filter: blur(2px);
+            z-index: 1180;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .tasks-overlay.open {
+            display: flex;
+        }
+
+        .tasks-panel {
+            width: min(640px, 96vw);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(8, 17, 35, 0.98);
+            box-shadow: 0 24px 64px rgba(2, 6, 23, 0.55);
+            overflow: hidden;
+        }
+
+        .tasks-panel-head {
+            height: 52px;
+            border-bottom: 1px solid var(--line);
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .tasks-panel-body {
+            padding: 12px;
+            display: grid;
+            gap: 10px;
         }
 
         .mobile-tools-toggle {
@@ -869,7 +1022,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         .app.collapsed .sidebar .brand,
         .app.collapsed .sidebar .side-foot,
         .app.collapsed .sidebar #profileTrigger,
-        .app.collapsed .sidebar .rail-nav {
+        .app.collapsed .sidebar .panel-nav {
             display: flex;
         }
 
@@ -883,9 +1036,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             margin-top: auto;
         }
 
-        .app.collapsed .sidebar .rail-nav {
-            display: grid;
-        }
+        .app.collapsed .sidebar .panel-nav { display: grid; }
 
         .app.collapsed .sidebar .profile-trigger {
             width: 100%;
@@ -904,6 +1055,35 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         .app.collapsed .sidebar .user-menu,
         .app.collapsed .sidebar .side-mid {
             display: none;
+        }
+
+        .app.collapsed .panel-nav {
+            border: none;
+            padding: 0;
+            background: transparent;
+            gap: 4px;
+            margin-top: 4px;
+            align-content: start;
+        }
+
+        .app.collapsed .panel-nav h4,
+        .app.collapsed .panel-nav .panel-nav-label {
+            display: none;
+        }
+
+        .app.collapsed .panel-nav .panel-nav-btn {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border-radius: 10px;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .app.collapsed .panel-nav .panel-nav-icon {
+            width: 14px;
+            min-width: 14px;
+            font-size: 11px;
         }
 
         .app.collapsed .collapse-btn {
@@ -1057,6 +1237,52 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
                 height: 42px;
             }
         }
+
+        .admin-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 7, 18, 0.68);
+            backdrop-filter: blur(3px);
+            z-index: 1200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .admin-overlay.open {
+            display: flex;
+        }
+
+        .admin-panel-overlay {
+            width: min(1280px, 96vw);
+            height: min(88vh, 900px);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            overflow: hidden;
+            background: rgba(8, 17, 35, 0.98);
+            box-shadow: 0 24px 64px rgba(2, 6, 23, 0.55);
+            display: grid;
+            grid-template-rows: auto 1fr;
+        }
+
+        .admin-panel-head {
+            height: 52px;
+            border-bottom: 1px solid var(--line);
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .admin-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
     </style>
 </head>
 <body>
@@ -1075,39 +1301,46 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
                 <div class="brand-name hide-when-collapsed">Server Hub</div>
             </div>
 
-            <div class="rail-nav">
-                <button class="rail-btn" id="railRootBtn" title="Do roota">🏠</button>
-                <button class="rail-btn" id="railRefreshBtn" title="Odśwież folder">↻</button>
-                <button class="rail-btn" id="railTerminalBtn" title="Terminal">⌨</button>
-                <button class="rail-btn" id="railToolsBtn" title="Akcje">🧰</button>
+            <div class="panel-nav" aria-label="Panele administracyjne">
+                <h4>Panele admina</h4>
+                <button class="panel-nav-btn active" data-main-view="dashboard" title="Dashboard">
+                    <span class="panel-nav-icon">▦</span>
+                    <span class="panel-nav-label">Dashboard</span>
+                </button>
+                <button class="panel-nav-btn" data-main-view="explorer" title="Pliki serwera">
+                    <span class="panel-nav-icon">📁</span>
+                    <span class="panel-nav-label">Pliki serwera</span>
+                </button>
+                <button class="panel-nav-btn" data-panel-url="users.php" data-panel-title="Uzytkownicy" title="Uzytkownicy">
+                    <span class="panel-nav-icon">👤</span>
+                    <span class="panel-nav-label">Uzytkownicy</span>
+                </button>
+                <button class="panel-nav-btn" data-panel-url="roles.php" data-panel-title="Role" title="Role">
+                    <span class="panel-nav-icon">🛡</span>
+                    <span class="panel-nav-label">Role</span>
+                </button>
+                <button class="panel-nav-btn" data-panel-url="relations.php" data-panel-title="Relacje" title="Relacje">
+                    <span class="panel-nav-icon">🔗</span>
+                    <span class="panel-nav-label">Relacje</span>
+                </button>
+                <button class="panel-nav-btn" data-panel-url="access.php" data-panel-title="Dostepy" title="Dostepy">
+                    <span class="panel-nav-icon">✅</span>
+                    <span class="panel-nav-label">Dostepy</span>
+                </button>
+                <button class="panel-nav-btn" data-panel-url="database.php" data-panel-title="Baza danych" title="Baza danych">
+                    <span class="panel-nav-icon">🗄</span>
+                    <span class="panel-nav-label">Baza danych</span>
+                </button>
+                <button class="panel-nav-btn" data-panel-url="demos.php" data-panel-title="Demo Links" title="Demo Links">
+                    <span class="panel-nav-icon">🔐</span>
+                    <span class="panel-nav-label">Demo Links</span>
+                </button>
             </div>
 
             <div class="side-mid">
-                <div id="miniPreview" class="mini-preview hide-when-collapsed">
-                    Mini podglad folderu z index pojawi sie tutaj.
-                </div>
-
-                <div class="pins hide-when-collapsed">
-                    <h4>Przypiete</h4>
-                    <div id="pinsList"></div>
-                </div>
-
-                <div class="recent hide-when-collapsed">
-                    <h4>Ostatnie pliki</h4>
-                    <div id="recentList"></div>
-                </div>
-
-                <div class="tasks hide-when-collapsed">
-                    <h4>Task runner</h4>
-                    <div id="taskList"></div>
-                    <div class="task-actions">
-                        <button id="addTaskBtn" class="btn">+ Task</button>
-                        <button id="resetTasksBtn" class="btn">Reset</button>
-                        <button id="exportTasksBtn" class="btn">Export</button>
-                        <button id="importTasksBtn" class="btn">Import</button>
-                    </div>
-                    <input id="importTasksInput" type="file" accept="application/json,.json" style="display:none;">
-                </div>
+                <div id="miniPreview" class="hidden"></div>
+                <div id="pinsList" class="hidden"></div>
+                <div id="recentList" class="hidden"></div>
             </div>
 
             <div class="side-foot">
@@ -1129,21 +1362,55 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             </div>
         </aside>
 
-        <main class="main">
+        <main class="main dashboard-mode">
             <div class="top" style="height: 64px;">
                 <div>
                     <!-- <div class="title">Eksplorator plikow</div> -->
                     <!-- <div class="sub">Root + operacje + podglad + terminal</div> -->
                 </div>
                 <div class="top-right">
+                    <button id="openTasksOverlayBtn" class="btn" title="Task runner">Task runner</button>
                     <button id="mobileToolsToggle" class="btn mobile-tools-toggle" title="Pokaż lub ukryj narzędzia">Narzędzia</button>
                     <button id="toggleTerminalBtn" class="btn icon" title="Terminal">⌨</button>
                     <button id="terminalTabBtn" class="btn icon" title="Terminal w nowej karcie">↗</button>
-                    <button id="toRootBtnTop" class="btn icon root" title="Do roota">🏠</button>
                 </div>
             </div>
 
-            <div class="top-tools">
+            <section id="dashboardView" class="dashboard-view">
+                <div class="dashboard-head">
+                    <div class="title">Admin Dashboard</div>
+                    <div class="sub">Widok startowy. Explorer plikow otworzysz z przycisku Pliki serwera w sidebarze.</div>
+                </div>
+                <div class="dashboard-grid">
+                    <article class="dashboard-card">
+                        <h3>Uzytkownicy</h3>
+                        <p>Role kont i szybkie aktualizacje uprawnien.</p>
+                        <button class="btn" data-panel-url="users.php" data-panel-title="Uzytkownicy">Otworz panel</button>
+                    </article>
+                    <article class="dashboard-card">
+                        <h3>Role</h3>
+                        <p>Definicje rol i przypisania systemowe.</p>
+                        <button class="btn" data-panel-url="roles.php" data-panel-title="Role">Otworz panel</button>
+                    </article>
+                    <article class="dashboard-card">
+                        <h3>Dostepy</h3>
+                        <p>Mapa app role i access per user.</p>
+                        <button class="btn" data-panel-url="access.php" data-panel-title="Dostepy">Otworz panel</button>
+                    </article>
+                    <article class="dashboard-card">
+                        <h3>Baza danych</h3>
+                        <p>SQL runner, tabele i kolumny.</p>
+                        <button class="btn" data-panel-url="database.php" data-panel-title="Baza danych">Otworz panel</button>
+                    </article>
+                    <article class="dashboard-card">
+                        <h3>Demo Links</h3>
+                        <p>Publiczne linki demo z autologowaniem na konta pokazowe.</p>
+                        <button class="btn" data-panel-url="demos.php" data-panel-title="Demo Links">Otworz panel</button>
+                    </article>
+                </div>
+            </section>
+
+            <div class="top-tools explorer-only">
                 <div class="top-tools-group">
                     <button class="tool-pill icon-only" id="fabBackBtn" title="Powrót">←</button>
                     <button class="tool-pill icon-only" id="fabRefreshBtn" title="Odśwież">↻</button>
@@ -1161,15 +1428,15 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             </div>
 
             <!-- Pasek wyszukiwania — pływający overlay -->
-            <div id="searchInline" class="search-inline">
+            <div id="searchInline" class="search-inline explorer-only">
                 <input id="searchTextInput" type="text" placeholder="Szukaj w plikach..." autocomplete="off">
                 <button id="searchTextRunBtn" class="btn">Szukaj</button>
                 <button id="searchTextCloseBtn" class="btn icon" style="width:32px;min-width:32px;">✕</button>
             </div>
 
-            <div id="crumbs" class="crumbs">/</div>
+            <div id="crumbs" class="crumbs explorer-only">/</div>
 
-            <div id="list" class="list"></div>
+            <div id="list" class="list explorer-only"></div>
 
             <div id="previewPane" class="preview-pane">
                 <div class="preview-head">
@@ -1197,7 +1464,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
                 </div>
             </div>
 
-            <div id="status" class="status">Gotowe</div>
+            <div id="status" class="status explorer-only">Gotowe</div>
         </main>
     </div>
 
@@ -1214,6 +1481,38 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
 
     <div id="terminalDock" class="terminal-dock">
         <button id="terminalDockItem" class="dock-item hidden">Terminal</button>
+    </div>
+
+    <div id="tasksOverlay" class="tasks-overlay" aria-hidden="true">
+        <div class="tasks-panel">
+            <div class="tasks-panel-head">
+                <strong>Task runner</strong>
+                <button id="closeTasksOverlayBtn" class="btn">Zamknij</button>
+            </div>
+            <div class="tasks-panel-body">
+                <div id="taskList"></div>
+                <div class="task-actions">
+                    <button id="addTaskBtn" class="btn">+ Task</button>
+                    <button id="resetTasksBtn" class="btn">Reset</button>
+                    <button id="exportTasksBtn" class="btn">Export</button>
+                    <button id="importTasksBtn" class="btn">Import</button>
+                </div>
+                <input id="importTasksInput" type="file" accept="application/json,.json" style="display:none;">
+            </div>
+        </div>
+    </div>
+
+    <div id="adminOverlay" class="admin-overlay" aria-hidden="true">
+        <div class="admin-panel-overlay">
+            <div class="admin-panel-head">
+                <strong id="adminPanelTitle">Panel administracyjny</strong>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <a id="openAdminPanelTab" class="btn" href="access.php" target="_blank" rel="noopener">Otworz osobno</a>
+                    <button id="closeAdminOverlayBtn" class="btn">Zamknij</button>
+                </div>
+            </div>
+            <iframe id="adminFrame" class="admin-frame" src="about:blank" loading="lazy"></iframe>
+        </div>
     </div>
 
     <input id="uploadFilesInput" class="hidden" type="file" multiple>
@@ -1244,6 +1543,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             selectedPath: '',
             selectedType: '',
             currentFile: '',
+            currentMainView: 'dashboard',
             terminalMinimized: false,
         };
 
@@ -1266,6 +1566,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         };
 
         const appEl = document.getElementById('app');
+        const mainEl = document.querySelector('.main');
         const listEl = document.getElementById('list');
         const statusEl = document.getElementById('status');
         const crumbsEl = document.getElementById('crumbs');
@@ -1278,10 +1579,20 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         const terminalDockItemEl = document.getElementById('terminalDockItem');
         const topToolsEl = document.querySelector('.top-tools');
         const mobileToolsToggleEl = document.getElementById('mobileToolsToggle');
+        const mainViewButtonsEl = Array.from(document.querySelectorAll('[data-main-view]'));
         const railRootBtnEl = document.getElementById('railRootBtn');
         const railRefreshBtnEl = document.getElementById('railRefreshBtn');
         const railTerminalBtnEl = document.getElementById('railTerminalBtn');
         const railToolsBtnEl = document.getElementById('railToolsBtn');
+        const openTasksOverlayBtnEl = document.getElementById('openTasksOverlayBtn');
+        const tasksOverlayEl = document.getElementById('tasksOverlay');
+        const closeTasksOverlayBtnEl = document.getElementById('closeTasksOverlayBtn');
+        const adminPanelButtonsEl = Array.from(document.querySelectorAll('[data-panel-url]'));
+        const adminOverlayEl = document.getElementById('adminOverlay');
+        const closeAdminOverlayBtnEl = document.getElementById('closeAdminOverlayBtn');
+        const adminFrameEl = document.getElementById('adminFrame');
+        const adminPanelTitleEl = document.getElementById('adminPanelTitle');
+        const openAdminPanelTabEl = document.getElementById('openAdminPanelTab');
 
         const PIN_STORAGE_KEY = 'serverHubPins';
         const TERM_POS_STORAGE_KEY = 'serverHubTermPos';
@@ -1327,6 +1638,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
         function renderPins() {
             const pins = getPins();
             const holder = document.getElementById('pinsList');
+            if (!holder) return;
             holder.innerHTML = '';
             if (pins.length === 0) {
                 holder.innerHTML = '<div class="sub">Brak przypietych</div>';
@@ -1345,6 +1657,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
 
         function renderRecentFiles() {
             const holder = document.getElementById('recentList');
+            if (!holder) return;
             const items = getRecentFiles();
             holder.innerHTML = '';
 
@@ -1391,6 +1704,7 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
 
         function renderTasks() {
             const holder = document.getElementById('taskList');
+            if (!holder) return;
             const tasks = getTasks();
             holder.innerHTML = '';
 
@@ -1486,6 +1800,25 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             statusEl.textContent = text;
         }
 
+        async function setMainView(view) {
+            const nextView = view === 'explorer' ? 'explorer' : 'dashboard';
+            state.currentMainView = nextView;
+
+            if (mainEl) {
+                mainEl.classList.toggle('dashboard-mode', nextView === 'dashboard');
+                mainEl.classList.toggle('explorer-mode', nextView === 'explorer');
+            }
+
+            mainViewButtonsEl.forEach((button) => {
+                const btnView = button.getAttribute('data-main-view') || '';
+                button.classList.toggle('active', btnView === nextView);
+            });
+
+            if (nextView === 'explorer' && state.root && !state.current) {
+                await loadDir(state.root);
+            }
+        }
+
         function updatePinButtonVisual(path, type) {
             const pinBtn = document.getElementById('fabPinBtn');
             const pins = getPins();
@@ -1551,11 +1884,15 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             renderPins();
             renderRecentFiles();
             renderTasks();
-            await loadDir(state.root);
+            await setMainView('dashboard');
 
             const params = new URLSearchParams(window.location.search);
             if (params.get('terminal') === '1') {
                 openTerminal();
+            }
+            if (params.get('view') === 'explorer') {
+                await setMainView('explorer');
+                await loadDir(state.root);
             }
         }
 
@@ -1622,13 +1959,18 @@ $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userN
             if (type === 'directory') {
                 await loadMiniIndexPreview(path);
             } else {
-                miniPreviewEl.textContent = 'Zaznaczono plik. Kliknij 2x, aby otworzyc edytor lub podglad.';
+                if (miniPreviewEl) {
+                    miniPreviewEl.textContent = 'Zaznaczono plik. Kliknij 2x, aby otworzyc edytor lub podglad.';
+                }
             }
 
             updatePinButtonVisual(path, type);
         }
 
         async function loadMiniIndexPreview(dirPath) {
+            if (!miniPreviewEl) {
+                return;
+            }
             const data = await apiGet('folder_index_preview', { path: dirPath });
             if (data.error) {
                 miniPreviewEl.textContent = `Mini podglad: ${data.error}`;
@@ -2341,7 +2683,15 @@ class ${baseName}Controller
             setStatus('Ustawienia beda dostepne w kolejnym kroku.');
         });
 
-        document.getElementById('toRootBtnTop').addEventListener('click', () => loadDir(state.root));
+        mainViewButtonsEl.forEach((button) => {
+            button.addEventListener('click', async () => {
+                const view = button.getAttribute('data-main-view') || 'dashboard';
+                await setMainView(view);
+                if (view === 'explorer' && state.root) {
+                    await loadDir(state.root);
+                }
+            });
+        });
 
         function syncMobileToolsState() {
             if (!topToolsEl || !mobileToolsToggleEl) return;
@@ -2363,6 +2713,117 @@ class ${baseName}Controller
 
             window.addEventListener('resize', syncMobileToolsState);
             syncMobileToolsState();
+        }
+
+        function openAdminOverlay(panelUrl, panelTitle) {
+            if (!adminOverlayEl || !adminFrameEl) {
+                window.location.href = panelUrl;
+                return;
+            }
+
+            const targetUrl = `${panelUrl}?embed=1`;
+            adminFrameEl.setAttribute('src', targetUrl);
+
+            if (adminPanelTitleEl) {
+                adminPanelTitleEl.textContent = panelTitle || 'Panel administracyjny';
+            }
+            if (openAdminPanelTabEl) {
+                openAdminPanelTabEl.setAttribute('href', panelUrl);
+            }
+
+            adminOverlayEl.classList.add('open');
+            adminOverlayEl.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeAdminOverlay() {
+            if (!adminOverlayEl) {
+                return;
+            }
+
+            adminOverlayEl.classList.remove('open');
+            adminOverlayEl.setAttribute('aria-hidden', 'true');
+        }
+
+        function openTasksOverlay() {
+            if (!tasksOverlayEl) return;
+            tasksOverlayEl.classList.add('open');
+            tasksOverlayEl.setAttribute('aria-hidden', 'false');
+            renderTasks();
+        }
+
+        function closeTasksOverlay() {
+            if (!tasksOverlayEl) return;
+            tasksOverlayEl.classList.remove('open');
+            tasksOverlayEl.setAttribute('aria-hidden', 'true');
+        }
+
+        adminPanelButtonsEl.forEach((button) => {
+            button.addEventListener('click', () => {
+                const panelUrl = button.getAttribute('data-panel-url') || 'access.php';
+                const panelTitle = button.getAttribute('data-panel-title') || 'Panel administracyjny';
+                openAdminOverlay(panelUrl, panelTitle);
+            });
+        });
+
+        if (closeAdminOverlayBtnEl) {
+            closeAdminOverlayBtnEl.addEventListener('click', closeAdminOverlay);
+        }
+
+        if (openTasksOverlayBtnEl) {
+            openTasksOverlayBtnEl.addEventListener('click', openTasksOverlay);
+        }
+
+        if (closeTasksOverlayBtnEl) {
+            closeTasksOverlayBtnEl.addEventListener('click', closeTasksOverlay);
+        }
+
+        if (adminOverlayEl) {
+            adminOverlayEl.addEventListener('click', (e) => {
+                if (e.target === adminOverlayEl) {
+                    closeAdminOverlay();
+                }
+            });
+        }
+
+        if (tasksOverlayEl) {
+            tasksOverlayEl.addEventListener('click', (e) => {
+                if (e.target === tasksOverlayEl) {
+                    closeTasksOverlay();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && adminOverlayEl && adminOverlayEl.classList.contains('open')) {
+                closeAdminOverlay();
+            }
+            if (e.key === 'Escape' && tasksOverlayEl && tasksOverlayEl.classList.contains('open')) {
+                closeTasksOverlay();
+            }
+        });
+
+        try {
+            const qs = new URLSearchParams(window.location.search);
+            if (qs.get('panel') === 'access') {
+                openAdminOverlay('access.php', 'Dostepy');
+            }
+            if (qs.get('panel') === 'users') {
+                openAdminOverlay('users.php', 'Uzytkownicy');
+            }
+            if (qs.get('panel') === 'roles') {
+                openAdminOverlay('roles.php', 'Role');
+            }
+            if (qs.get('panel') === 'relations') {
+                openAdminOverlay('relations.php', 'Relacje');
+            }
+            if (qs.get('panel') === 'database') {
+                openAdminOverlay('database.php', 'Baza danych');
+            }
+            if (qs.get('panel') === 'demos') {
+                openAdminOverlay('demos.php', 'Demo Links');
+            }
+        } catch (e) {
+            // Ignore malformed query string.
         }
 
         if (railRootBtnEl) {

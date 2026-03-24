@@ -1,19 +1,89 @@
 ﻿<?php
-session_start();
 header('Content-Type: text/html; charset=UTF-8');
 
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    header('Location: login.php');
-    exit();
+if (is_file(__DIR__ . '/../core/access_control.php')) {
+    require_once __DIR__ . '/../core/access_control.php';
+} else {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        header('Location: login.php');
+        exit();
+    }
+
+    if (!function_exists('startowa_require_login')) {
+        function startowa_require_login(): void
+        {
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
+            }
+            if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+                header('Location: login.php');
+                exit();
+            }
+        }
+    }
+
+    if (!function_exists('startowa_normalize_role')) {
+        function startowa_normalize_role(?string $role): string
+        {
+            $normalized = strtolower(trim((string) $role));
+            return $normalized !== '' ? $normalized : 'user';
+        }
+    }
+
+    if (!function_exists('startowa_refresh_access_cache')) {
+        function startowa_refresh_access_cache(): void {}
+    }
+
+    if (!function_exists('startowa_current_user_access')) {
+        function startowa_current_user_access(): array
+        {
+            return ['apps' => ['dashboard', 'dj', 'optivio', 'taski', 'taskora']];
+        }
+    }
+
+    if (!function_exists('startowa_redirect')) {
+        function startowa_redirect(string $path): void
+        {
+            $normalized = ltrim($path, '/');
+            if (strpos($normalized, 'public/') === 0) {
+                $normalized = substr($normalized, 7);
+            }
+
+            header('Location: ' . $normalized);
+            exit();
+        }
+    }
 }
 
+startowa_require_login();
+
 $userName = $_SESSION['imie'] ?? 'Uzytkownik';
-$userRole = $_SESSION['rola'] ?? 'user';
+$userRole = startowa_normalize_role((string) ($_SESSION['rola'] ?? 'user'));
 $userEmail = $_SESSION['email'] ?? (strtolower(preg_replace('/\s+/', '.', $userName)) . '@local');
 
-if ($userRole === 'admin') {
-    header('Location: admin/index.php');
-    exit();
+startowa_refresh_access_cache();
+$access = startowa_current_user_access();
+$allowedApps = (array) ($access['apps'] ?? []);
+
+if (in_array($userRole, ['admin', 'owner'], true) && in_array('admin_panel', $allowedApps, true)) {
+    startowa_redirect('public/admin/index.php');
+}
+
+$appLinks = [
+    'dj' => ['label' => 'DamJanJot DJ', 'url' => 'https://app-dj.code-dj.pl', 'icon' => '&#127925;', 'desc' => 'Panel DJ - sety, playlisty, rynek'],
+    'optivio' => ['label' => 'Optivio', 'url' => 'https://optivio.code-dj.pl', 'icon' => '&#128202;', 'desc' => 'Moduly, galeria, notatnik, todo'],
+    'taski' => ['label' => 'Taski', 'url' => 'https://taski.j.pl', 'icon' => '&#9989;', 'desc' => 'Zarzadzanie zadaniami'],
+    'taskora' => ['label' => 'Taskora', 'url' => 'https://taskora.code-dj.pl', 'icon' => '&#128203;', 'desc' => 'Workspace i projekty'],
+];
+
+$visibleApps = [];
+foreach ($appLinks as $key => $meta) {
+    if (in_array($key, $allowedApps, true)) {
+        $visibleApps[$key] = $meta;
+    }
 }
 ?>
 <!doctype html>
@@ -288,18 +358,15 @@ if ($userRole === 'admin') {
             </div>
             <div class="nav-section">
                 <h4>Aplikacje</h4>
-                <a class="nav-link" href="https://app-dj.code-dj.pl" target="_blank" rel="noopener">
-                    <span class="nav-icon">&#127925;</span> DamJanJot DJ
-                </a>
-                <a class="nav-link" href="https://optivio.code-dj.pl" target="_blank" rel="noopener">
-                    <span class="nav-icon">&#128202;</span> Optivio
-                </a>
-                <a class="nav-link" href="https://taski.j.pl" target="_blank" rel="noopener">
-                    <span class="nav-icon">&#9989;</span> Taski
-                </a>
-                <a class="nav-link" href="https://taskora.code-dj.pl" target="_blank" rel="noopener">
-                    <span class="nav-icon">&#128203;</span> Taskora
-                </a>
+                <?php if (empty($visibleApps)): ?>
+                    <div class="nav-link" style="cursor:default; opacity:.75;">Brak przypisanych aplikacji</div>
+                <?php else: ?>
+                    <?php foreach ($visibleApps as $app): ?>
+                        <a class="nav-link" href="<?php echo htmlspecialchars($app['url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">
+                            <span class="nav-icon"><?php echo $app['icon']; ?></span> <?php echo htmlspecialchars($app['label'], ENT_QUOTES, 'UTF-8'); ?>
+                        </a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </nav>
 
@@ -328,26 +395,21 @@ if ($userRole === 'admin') {
             <div class="welcome-sub">Wybierz aplikacj&#281; lub skr&#243;t poni&#380;ej.</div>
 
             <div class="cards">
-                <a class="card" href="https://app-dj.code-dj.pl" target="_blank" rel="noopener">
-                    <div class="card-icon">&#127925;</div>
-                    <div class="card-title">DamJanJot DJ</div>
-                    <div class="card-sub">Panel DJ &mdash; sety, playlisty, rynek</div>
-                </a>
-                <a class="card" href="https://optivio.code-dj.pl" target="_blank" rel="noopener">
-                    <div class="card-icon">&#128202;</div>
-                    <div class="card-title">Optivio</div>
-                    <div class="card-sub">Modu&#322;y, galeria, notatnik, todo</div>
-                </a>
-                <a class="card" href="https://taski.j.pl" target="_blank" rel="noopener">
-                    <div class="card-icon">&#9989;</div>
-                    <div class="card-title">Taski</div>
-                    <div class="card-sub">Zarz&#261;dzanie zadaniami</div>
-                </a>
-                <a class="card" href="https://taskora.code-dj.pl" target="_blank" rel="noopener">
-                    <div class="card-icon">&#128203;</div>
-                    <div class="card-title">Taskora</div>
-                    <div class="card-sub">Workspace i projekty</div>
-                </a>
+                <?php if (empty($visibleApps)): ?>
+                    <div class="card" style="cursor:default;">
+                        <div class="card-icon">&#9888;</div>
+                        <div class="card-title">Brak dostepu do aplikacji</div>
+                        <div class="card-sub">Skontaktuj sie z administratorem, aby przypisal Ci dostep do modulow.</div>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($visibleApps as $app): ?>
+                        <a class="card" href="<?php echo htmlspecialchars($app['url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">
+                            <div class="card-icon"><?php echo $app['icon']; ?></div>
+                            <div class="card-title"><?php echo htmlspecialchars($app['label'], ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="card-sub"><?php echo htmlspecialchars($app['desc'], ENT_QUOTES, 'UTF-8'); ?></div>
+                        </a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </main>

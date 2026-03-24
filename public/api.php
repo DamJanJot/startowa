@@ -1,12 +1,28 @@
 <?php
-session_start();
-header('Content-Type: application/json; charset=UTF-8');
+if (is_file(__DIR__ . '/../core/access_control.php')) {
+    require_once __DIR__ . '/../core/access_control.php';
 
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
-    exit();
+    startowa_require_login();
+
+    if (!startowa_has_app_access('admin_panel') && !startowa_has_app_access('server_hub')) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(['error' => 'Forbidden']);
+        exit();
+    }
+} else {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(['error' => 'Unauthorized']);
+        exit();
+    }
 }
+
+header('Content-Type: application/json; charset=UTF-8');
 
 $configuredRoot = getenv('DASHBOARD_ROOT') ?: '';
 $serverRoot = $configuredRoot !== '' ? realpath($configuredRoot) : realpath(dirname(__DIR__, 2));
