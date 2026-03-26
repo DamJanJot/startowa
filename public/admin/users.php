@@ -18,14 +18,33 @@ if (startowa_table_exists($pdo, 'startowa_roles')) {
     $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-if (empty($roles)) {
-    $stmt = $pdo->query('SELECT DISTINCT LOWER(TRIM(COALESCE(rola, "user"))) AS role_key FROM uzytkownicy ORDER BY role_key ASC');
-    $roleRows = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    foreach ($roleRows as $roleKey) {
-        $normalized = startowa_normalize_role((string) $roleKey);
-        $roles[] = ['key' => $normalized, 'name' => ucfirst($normalized)];
+$rolesByKey = [];
+foreach ($roles as $role) {
+    $normalized = startowa_normalize_role((string) ($role['key'] ?? ''));
+    if ($normalized === '') {
+        continue;
+    }
+    $rolesByKey[$normalized] = [
+        'key' => $normalized,
+        'name' => (string) ($role['name'] ?? ucfirst($normalized)),
+    ];
+}
+
+$usersRoleRows = $pdo->query('SELECT DISTINCT LOWER(TRIM(COALESCE(rola, "user"))) AS role_key FROM uzytkownicy ORDER BY role_key ASC')->fetchAll(PDO::FETCH_COLUMN);
+foreach ($usersRoleRows as $rawRole) {
+    $roleKey = startowa_normalize_role((string) $rawRole);
+    if ($roleKey === '') {
+        continue;
+    }
+    if (!isset($rolesByKey[$roleKey])) {
+        $rolesByKey[$roleKey] = ['key' => $roleKey, 'name' => ucfirst($roleKey)];
     }
 }
+
+$roles = array_values($rolesByKey);
+usort($roles, static function (array $left, array $right): int {
+    return strcmp((string) $left['name'], (string) $right['name']);
+});
 
 if (empty($roles)) {
     $roles = [

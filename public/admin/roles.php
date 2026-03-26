@@ -29,6 +29,18 @@ try {
             ('admin', 'Admin', 1),
             ('user', 'User', 1)");
     }
+
+    $rawRoleRows = $pdo->query('SELECT DISTINCT LOWER(TRIM(COALESCE(rola, "user"))) AS role_key FROM uzytkownicy ORDER BY role_key ASC')->fetchAll(PDO::FETCH_COLUMN);
+    if (!empty($rawRoleRows)) {
+        $insertRole = $pdo->prepare('INSERT IGNORE INTO startowa_roles (`key`, `name`, is_system) VALUES (?, ?, 0)');
+        foreach ($rawRoleRows as $rawRole) {
+            $roleKey = startowa_normalize_role((string) $rawRole);
+            if ($roleKey === '') {
+                continue;
+            }
+            $insertRole->execute([$roleKey, ucfirst($roleKey)]);
+        }
+    }
 } catch (Throwable $e) {
     $error = $e->getMessage();
 }

@@ -54,6 +54,7 @@ if (is_file(__DIR__ . '/../../core/access_control.php')) {
             'taskora' => 'Taskora',
             'admin_panel' => 'Panel admina',
             'server_hub' => 'Server Hub',
+            'neuronetix' => 'Neuronetix',
         ]);
     }
 
@@ -86,10 +87,13 @@ function panel_layout_start(string $title, string $subtitle): void
     echo 'body.embed{background:transparent}.card{background:linear-gradient(180deg,rgba(15,23,42,.88),rgba(10,18,35,.88));border:1px solid var(--line);color:var(--txt);border-radius:14px}';
     echo '.muted{color:var(--muted)}.table{color:var(--txt);margin-bottom:0}.table td,.table th{border-color:var(--line);background:rgba(255,255,255,.02)!important}';
     echo '.table-responsive{border:1px solid var(--line);border-radius:12px;overflow:auto}.form-control,.form-select{background:rgba(15,23,42,.9);border:1px solid var(--line);color:var(--txt)}';
+    echo '.form-control::placeholder{color:#9db0c7}.form-select option{background:#0f172a;color:var(--txt)}';
     echo '.form-control:focus,.form-select:focus{border-color:var(--acc);box-shadow:0 0 0 .2rem rgba(56,189,248,.2)}';
     echo '.chip{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.03)}';
     echo '.chip:hover{border-color:var(--acc);background:rgba(56,189,248,.08)}';
     echo '.btn-outline-light{border-color:var(--line)!important;color:var(--txt)!important}.btn-outline-light:hover{border-color:var(--acc)!important;background:rgba(56,189,248,.12)!important;color:#dff7ff!important}';
+    echo '.btn-outline-info{border-color:rgba(56,189,248,.6)!important;color:#bae6fd!important}.btn-outline-info:hover{border-color:var(--acc)!important;background:rgba(56,189,248,.12)!important;color:#dff7ff!important}';
+    echo '.form-label,label,.alert{color:var(--txt)}';
     echo '</style></head><body class="' . ($embedded ? 'embed' : '') . '"><div class="container py-4">';
     echo '<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">';
     echo '<div><h1 class="h3 mb-1">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h1><div class="muted">' . htmlspecialchars($subtitle, ENT_QUOTES, 'UTF-8') . '</div></div>';

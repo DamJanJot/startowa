@@ -45,6 +45,11 @@ function startowa_url(string $path): string
 
 function startowa_redirect(string $path): void
 {
+    if (preg_match('~^(https?:)?//~i', $path) === 1 || str_starts_with($path, '/')) {
+        header('Location: ' . $path);
+        exit();
+    }
+
     header('Location: ' . startowa_url($path));
     exit();
 }
@@ -74,8 +79,16 @@ function startowa_default_role_apps(string $role): array
     $map = [
         'owner' => $all,
         'admin' => $all,
+        'administrator' => $all,
+        'moderator' => ['dashboard', 'dj', 'optivio', 'taski', 'taskora', 'server_hub'],
         'manager' => ['dashboard', 'dj', 'optivio', 'taski', 'taskora'],
+        'analyst' => ['dashboard', 'optivio', 'taski'],
+        'support' => ['dashboard', 'taski', 'server_hub'],
         'pracownik' => ['dashboard', 'optivio', 'taski'],
+        'nauczyciel' => ['dashboard', 'neuronetix'],
+        'teacher' => ['dashboard', 'neuronetix'],
+        'uczen' => ['dashboard', 'neuronetix'],
+        'student' => ['dashboard', 'neuronetix'],
         'user' => ['dashboard', 'optivio', 'taski'],
         'guest' => ['dashboard'],
     ];
@@ -83,11 +96,82 @@ function startowa_default_role_apps(string $role): array
     return $map[$role] ?? $map['user'];
 }
 
+function startowa_app_catalog(): array
+{
+    return [
+        'dashboard' => [
+            'label' => 'Server Hub',
+            'url' => '/public/index.php',
+            'icon' => '🏠',
+            'desc' => 'Panel glowny i skroty do aplikacji',
+        ],
+        'server_hub' => [
+            'label' => 'Panel Admina',
+            'url' => '/public/admin/index.php',
+            'icon' => '🧭',
+            'desc' => 'Narzędzia administracyjne i techniczne',
+        ],
+        'admin_panel' => [
+            'label' => 'Panel Admina',
+            'url' => '/public/admin/index.php',
+            'icon' => '🛡',
+            'desc' => 'Role, dostepy i relacje uzytkownikow',
+        ],
+        'dj' => [
+            'label' => 'DamJanJot DJ',
+            'url' => 'https://app-dj.code-dj.pl',
+            'icon' => '🎵',
+            'desc' => 'Panel DJ - sety, playlisty, rynek',
+        ],
+        'optivio' => [
+            'label' => 'Optivio',
+            'url' => 'https://optivio.code-dj.pl',
+            'icon' => '📊',
+            'desc' => 'Moduly, galeria, notatnik i todo',
+        ],
+        'taski' => [
+            'label' => 'Taski',
+            'url' => 'https://taski.j.pl',
+            'icon' => '✅',
+            'desc' => 'Zarzadzanie zadaniami',
+        ],
+        'taskora' => [
+            'label' => 'Taskora',
+            'url' => 'https://taskora.code-dj.pl',
+            'icon' => '📋',
+            'desc' => 'Workspace i projekty',
+        ],
+        'neuronetix' => [
+            'label' => 'Neuronetix',
+            'url' => '/neuronetix/index.php',
+            'icon' => '🧠',
+            'desc' => 'Panel edukacyjny: uczen i nauczyciel',
+        ],
+    ];
+}
+
+function startowa_login_redirect_target(string $role, array $apps): string
+{
+    $normalizedRole = startowa_normalize_role($role);
+
+    if (in_array($normalizedRole, ['admin', 'owner', 'administrator'], true) && in_array('admin_panel', $apps, true)) {
+        return 'public/admin/index.php';
+    }
+
+    if (in_array($normalizedRole, ['uczen', 'student', 'nauczyciel', 'teacher'], true) && in_array('neuronetix', $apps, true)) {
+        return '/neuronetix/index.php';
+    }
+
+    return 'public/index.php';
+}
+
 function startowa_should_redirect_to_app(string $role): ?string
 {
     $roleAppsMap = [
         'uczen' => 'neuronetix',
+        'student' => 'neuronetix',
         'nauczyciel' => 'neuronetix',
+        'teacher' => 'neuronetix',
     ];
 
     return $roleAppsMap[$role] ?? null;

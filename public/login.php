@@ -60,10 +60,46 @@ if (is_file(__DIR__ . '/../core/access_control.php')) {
         {
             $roleAppsMap = [
                 'uczen' => 'neuronetix',
+                'student' => 'neuronetix',
                 'nauczyciel' => 'neuronetix',
+                'teacher' => 'neuronetix',
             ];
 
             return $roleAppsMap[$role] ?? null;
+        }
+    }
+
+    if (!function_exists('startowa_login_redirect_target')) {
+        function startowa_login_redirect_target(string $role, array $apps): string
+        {
+            $normalizedRole = startowa_normalize_role($role);
+
+            if (in_array($normalizedRole, ['admin', 'owner', 'administrator'], true) && in_array('admin_panel', $apps, true)) {
+                return 'public/admin/index.php';
+            }
+
+            if (in_array($normalizedRole, ['uczen', 'student', 'nauczyciel', 'teacher'], true) && in_array('neuronetix', $apps, true)) {
+                return '/neuronetix/index.php';
+            }
+
+            return 'public/index.php';
+        }
+    }
+
+    if (!function_exists('startowa_current_user_access')) {
+        function startowa_current_user_access(): array
+        {
+            $role = startowa_normalize_role((string) ($_SESSION['rola'] ?? 'user'));
+
+            if (in_array($role, ['uczen', 'student', 'nauczyciel', 'teacher'], true)) {
+                return ['role' => $role, 'apps' => ['dashboard', 'neuronetix']];
+            }
+
+            if (in_array($role, ['admin', 'owner', 'administrator'], true)) {
+                return ['role' => $role, 'apps' => ['dashboard', 'admin_panel', 'server_hub']];
+            }
+
+            return ['role' => $role, 'apps' => ['dashboard']];
         }
     }
 }
@@ -96,14 +132,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             startowa_refresh_access_cache();
 
-            $redirectApp = startowa_should_redirect_to_app($_SESSION['rola']);
-            if ($redirectApp === 'neuronetix') {
-                startowa_redirect('/neuronetix/index.php');
-            } elseif (startowa_has_app_access('admin_panel') && in_array($_SESSION['rola'], ['admin', 'owner'], true)) {
-                startowa_redirect('public/admin/index.php');
-            }
-
-            startowa_redirect('public/index.php');
+            $access = startowa_current_user_access();
+            $allowedApps = (array) ($access['apps'] ?? []);
+            $target = startowa_login_redirect_target((string) $_SESSION['rola'], $allowedApps);
+            startowa_redirect($target);
         } else {
             $errorMessage = 'Nieprawidłowy email lub hasło.';
         }
