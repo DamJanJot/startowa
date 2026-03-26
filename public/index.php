@@ -72,11 +72,14 @@ if (in_array($userRole, ['admin', 'owner'], true) && in_array('admin_panel', $al
     startowa_redirect('public/admin/index.php');
 }
 
-$appLinks = [
-    'dj' => ['label' => 'DamJanJot DJ', 'url' => 'https://app-dj.code-dj.pl', 'icon' => '&#127925;', 'desc' => 'Panel DJ - sety, playlisty, rynek'],
-    'optivio' => ['label' => 'Optivio', 'url' => 'https://optivio.code-dj.pl', 'icon' => '&#128202;', 'desc' => 'Moduly, galeria, notatnik, todo'],
-    'taski' => ['label' => 'Taski', 'url' => 'https://taski.j.pl', 'icon' => '&#9989;', 'desc' => 'Zarzadzanie zadaniami'],
-    'taskora' => ['label' => 'Taskora', 'url' => 'https://taskora.code-dj.pl', 'icon' => '&#128203;', 'desc' => 'Workspace i projekty'],
+$appLinks = function_exists('startowa_app_catalog') ? startowa_app_catalog() : [
+    'dashboard' => ['label' => 'Server Hub', 'url' => '/public/index.php', 'icon' => '🏠', 'desc' => 'Panel glowny i skroty do aplikacji'],
+    'dj' => ['label' => 'DamJanJot DJ', 'url' => 'https://app-dj.code-dj.pl', 'icon' => '🎵', 'desc' => 'Panel DJ - sety, playlisty, rynek'],
+    'optivio' => ['label' => 'Optivio', 'url' => 'https://optivio.code-dj.pl', 'icon' => '📊', 'desc' => 'Moduly, galeria, notatnik i todo'],
+    'taski' => ['label' => 'Taski', 'url' => 'https://taski.j.pl', 'icon' => '✅', 'desc' => 'Zarzadzanie zadaniami'],
+    'taskora' => ['label' => 'Taskora', 'url' => 'https://taskora.code-dj.pl', 'icon' => '📋', 'desc' => 'Workspace i projekty'],
+    'neuronetix' => ['label' => 'Neuronetix', 'url' => '/neuronetix/index.php', 'icon' => '🧠', 'desc' => 'Panel edukacyjny: uczen i nauczyciel'],
+    'admin_panel' => ['label' => 'Panel Admina', 'url' => '/public/admin/index.php', 'icon' => '🛡', 'desc' => 'Role, dostepy i relacje uzytkownikow'],
 ];
 
 $visibleApps = [];
@@ -285,6 +288,70 @@ foreach ($appLinks as $key => $meta) {
             height: 64px;
         }
 
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .app-switch {
+            position: relative;
+        }
+
+        .app-switch-btn {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--panel);
+            color: var(--txt);
+            padding: 8px 12px;
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .app-switch-btn:hover {
+            border-color: var(--acc);
+        }
+
+        .app-switch-menu {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            min-width: 240px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(8,17,35,0.98);
+            box-shadow: 0 12px 28px rgba(0,0,0,.35);
+            padding: 8px;
+            display: none;
+            z-index: 30;
+        }
+
+        .app-switch.open .app-switch-menu {
+            display: grid;
+            gap: 6px;
+        }
+
+        .app-switch-item {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.02);
+            color: var(--txt);
+            text-decoration: none;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .app-switch-item:hover {
+            border-color: var(--acc);
+            background: rgba(56,189,248,0.12);
+        }
+
         .top-title { font-size: 15px; font-weight: 600; color: var(--muted); }
 
         .content { min-height: 0; overflow-y: auto; padding: 28px 32px; }
@@ -325,6 +392,7 @@ foreach ($appLinks as $key => $meta) {
             .sidebar { max-height: 200px; overflow: auto; border-right: none; border-bottom: 1px solid var(--line); }
             .collapse-btn { display: none; }
             .content { padding: 16px; }
+            .app-switch-menu { right: auto; left: 0; }
         }
 
         @media (max-width: 600px) {
@@ -387,6 +455,26 @@ foreach ($appLinks as $key => $meta) {
     <main class="main">
         <div class="top">
             <span class="top-title">Witaj, <strong><?php echo htmlspecialchars($userName); ?></strong></span>
+            <div class="top-right">
+                <div class="app-switch" id="appSwitch">
+                    <button type="button" class="app-switch-btn" id="appSwitchBtn" aria-expanded="false">
+                        <span>🧭</span>
+                        <span>Przelacz aplikacje</span>
+                    </button>
+                    <div class="app-switch-menu" id="appSwitchMenu">
+                        <?php if (empty($visibleApps)): ?>
+                            <div class="app-switch-item" style="cursor:default; opacity:.75;">Brak przypisanych aplikacji</div>
+                        <?php else: ?>
+                            <?php foreach ($visibleApps as $app): ?>
+                                <a class="app-switch-item" href="<?php echo htmlspecialchars($app['url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">
+                                    <span><?php echo htmlspecialchars((string) $app['icon'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span><?php echo htmlspecialchars((string) $app['label'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="content">
             <div class="welcome-heading">
@@ -435,6 +523,22 @@ foreach ($appLinks as $key => $meta) {
     document.getElementById('profileTrigger').addEventListener('click', () => {
         if (appEl.classList.contains('collapsed')) return;
         document.getElementById('userMenu').classList.toggle('open');
+    });
+
+    const appSwitch = document.getElementById('appSwitch');
+    const appSwitchBtn = document.getElementById('appSwitchBtn');
+
+    appSwitchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = appSwitch.classList.toggle('open');
+        appSwitchBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!appSwitch.contains(e.target)) {
+            appSwitch.classList.remove('open');
+            appSwitchBtn.setAttribute('aria-expanded', 'false');
+        }
     });
 </script>
 </body>
